@@ -13,26 +13,27 @@ package can only run on a linux computer using the anaconda 'conda-forge' enviro
 Setup instructions are:
 
 1.  Find the most current anaconda release on https://www.anaconda.com/products/distribution .  Use curl in your 
-terminal to download the file and install.  Then, install the following necessary packages.
+terminal to download the file and install. 
 
 ```bash
-
+curl -O https://repo.anaconda.com/archive/Anaconda3-2022.05-Linux-x86_64.sh
+bash Anaconda3-2022.05-Linux-x86_64.sh
 
 ```
-
+ Then, install the following necessary packages.
+ 
+````bash
+conda config --set auto_activate_base false
+conda install -c anaconda xarray
+conda install -c anaconda pandas
+conda create --name pynio_env --channel conda-forge pynio
+````
 ## Usage
 
 ```python
-import foobar
+import coastal-winds
 
-# returns 'words'
-foobar.pluralize('word')
 
-# returns 'geese'
-foobar.pluralize('goose')
-
-# returns 'phenomenon'
-foobar.singularize('phenomena')
 ```
 
 ## Contributing
