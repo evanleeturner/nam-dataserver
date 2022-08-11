@@ -1,13 +1,23 @@
-# Foobar
+# Coastal-Winds
 
-Foobar is a Python library for dealing with word pluralization.
+Coastal-Winds is a program used to download and collate data from the North American Mesoscale Forecast System (known as NAM)
 
-## Installation
 
-Use the package manager [pip](https://pip.pypa.io/en/stable/) to install foobar.
+https://www.ncei.noaa.gov/products/weather-climate-models/north-american-mesoscale
+
+## Dependencies
+
+This program depends on a number of packages, namely the pynio package for interacting with grib2 files.  This 
+package can only run on a linux computer using the anaconda 'conda-forge' environment.
+
+Setup instructions are:
+
+1.  Find the most current anaconda release on https://www.anaconda.com/products/distribution .  Use curl in your 
+terminal to download the file and install.  Then, install the following necessary packages.
 
 ```bash
-pip install foobar
+
+
 ```
 
 ## Usage
