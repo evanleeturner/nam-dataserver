@@ -6,9 +6,12 @@ import lxml
 import os
 import time
 import glob
+import logging
+
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s :: %(levelname)s :: %(message)s')
 #!pip3 install lxml  Need to install this...
 
-print("Fetching html file information from NAM website...")
+
 
 #product for the 218 12k grid with 3hourly winds, taken from the main website here:
 #https://www.ncei.noaa.gov/products/weather-climate-models/north-american-mesoscale
@@ -16,15 +19,18 @@ url_base = 'https://www.ncei.noaa.gov/data/north-american-mesoscale-model/access
 
 def download_latest():
 
+    logging.debug("entering function download_latest()")
     #cleanup all existing files for space savings...
 
+    logging.debug("Changing directory to downloaded_data/latest ")
     os.chdir('downloaded_data/latest')
 
     files = glob.glob('*.grb2')
-
+    logging.debug("Found files for deletion: {files}").format(files=files)
     for f in files:
         try:
             os.remove(f)
+            logging.debug("Removed file {f}").format(f=f)
         except OSError as e:
             print("Error: %s : %s" % (f, e.strerror))
 
@@ -53,9 +59,9 @@ def download_latest():
 
     #download all of the grib files... this could take a while
     index = 0
-    for i in range(54):
+    for i in range(53):
         st2 = time.time()  #our program start time...
-        print("Fetching file ",url_base+our_month+our_day+file_prefix+'_'+str(index).zfill(3)+file_post,"...")
+        logging.info("Fetching file {str} ...",format(str=url_base+our_month+our_day+file_prefix+'_'+str(index).zfill(3)+file_post)
         urllib.request.urlretrieve(url_base+our_month+our_day+file_prefix+'_'+str(index).zfill(3)+file_post, filename=file_prefix+'_'+str(i).zfill(3)+file_post)
         # get the end time
         et = time.time()
