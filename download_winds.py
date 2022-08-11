@@ -5,6 +5,7 @@ import urllib.request
 import lxml
 import os
 import time
+import glob
 #!pip3 install lxml  Need to install this...
 
 print("Fetching html file information from NAM website...")
@@ -14,6 +15,19 @@ print("Fetching html file information from NAM website...")
 url_base = 'https://www.ncei.noaa.gov/data/north-american-mesoscale-model/access/forecast/'
 
 def download_latest():
+
+    #cleanup all existing files for space savings...
+
+    os.chdir('downloaded_data/latest')
+
+    files = glob.glob('*.grb2')
+
+    for f in files:
+        try:
+            os.remove(f)
+        except OSError as e:
+            print("Error: %s : %s" % (f, e.strerror))
+
 
     html_buff = pd.read_html(url_base)  #download the base page for forecast months
     monthly_forecasts= html_buff[0]
@@ -31,7 +45,7 @@ def download_latest():
     last_file = hourly_forecasts.iloc[-1,0]
     file_prefix = last_file[:-13]  #boil down the last file name to just the file prefix, etc. 'nam_218_20220806_1800'
 
-    os.chdir('downloaded_data')
+
 
     file_post = '.grb2'
 
@@ -39,7 +53,7 @@ def download_latest():
 
     #download all of the grib files... this could take a while
     index = 0
-    for i in range(52):
+    for i in range(54):
         st2 = time.time()  #our program start time...
         print("Fetching file ",url_base+our_month+our_day+file_prefix+'_'+str(index).zfill(3)+file_post,"...")
         urllib.request.urlretrieve(url_base+our_month+our_day+file_prefix+'_'+str(index).zfill(3)+file_post, filename=file_prefix+'_'+str(i).zfill(3)+file_post)
