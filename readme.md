@@ -23,10 +23,15 @@ bash Anaconda3-2022.05-Linux-x86_64.sh
  Then, install the following necessary packages.
  
 ````bash
-conda config --set auto_activate_base false
+conda create --name pynio_env --channel conda-forge pynio
+````
+restart your terminal, activate the pynio environment to install the next packages...  note: you can use conda config --set auto_activate_base false to not activate anaconda when you start a fresh terminal every login.
+
+````bash
+conda activate pynio
 conda install -c anaconda xarray
 conda install -c anaconda pandas
-conda create --name pynio_env --channel conda-forge pynio
+pip3 install lxml
 ````
 ## Usage
 
