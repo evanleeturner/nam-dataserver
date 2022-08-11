@@ -40,15 +40,15 @@ def download_latest():
     #download all of the grib files... this could take a while
     index = 0
     for i in range(52):
-
+        st2 = time.time()  #our program start time...
         print("Fetching file ",url_base+our_month+our_day+file_prefix+'_'+str(index).zfill(3)+file_post,"...")
         urllib.request.urlretrieve(url_base+our_month+our_day+file_prefix+'_'+str(index).zfill(3)+file_post, filename=file_prefix+'_'+str(i).zfill(3)+file_post)
         # get the end time
         et = time.time()
         # get the execution time
-        elapsed_time = et - st
+        elapsed_time = et - st2
         print('Download took: ', elapsed_time, ' seconds')
-        if index < 37:
+        if index < 36:
             index+=1
         else:
             index+=3
