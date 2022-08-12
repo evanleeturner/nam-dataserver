@@ -70,16 +70,16 @@ def fetch_twdb(filename,directory):
         #supress errors for slice copying here...
         located = df5.iloc[:1]
         located['station'] = row['station']
-        located['org_lat'] = row['lat']
-        located['org_lon'] = row['lon']
-        located['speed'] = wind_uv_to_spd(located['UGRD_P0_L103_GLC0'].iat[0],located['VGRD_P0_L103_GLC0'].iat[0])
-        located['dir'] = wind_uv_to_dir(located['UGRD_P0_L103_GLC0'].iat[0],located['VGRD_P0_L103_GLC0'].iat[0])
+        #located['org_lat'] = row['lat']
+        #located['org_lon'] = row['lon']
+        #located['speed'] = wind_uv_to_spd(located['UGRD_P0_L103_GLC0'].iat[0],located['VGRD_P0_L103_GLC0'].iat[0])
+        #located['dir'] = wind_uv_to_dir(located['UGRD_P0_L103_GLC0'].iat[0],located['VGRD_P0_L103_GLC0'].iat[0])
         arrays.append(located)
 
 
     winds = pd.DataFrame()
     winds = pd.concat(arrays)
-    winds.to_csv('/home/eturner/nam-dataserver/downloaded_data/'+filename+'.csv')
+    winds.to_csv('/home/eturner/nam-dataserver/downloaded_data/'+filename+'.csv',index=False)
 
 def download_latest():
     url_base = 'https://www.ncei.noaa.gov/data/north-american-mesoscale-model/access/forecast/'
