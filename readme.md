@@ -36,7 +36,7 @@ pip3 install lxml
 ## Usage
 
 ```python
-import coastal-winds
+import nam-dataserver
 
 
 ```
