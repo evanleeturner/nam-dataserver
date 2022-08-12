@@ -69,6 +69,7 @@ def fetch_twdb(filename,directory):
         #print ("row two as ",df5['gridlat_0'].iat[1], df5['gridlon_0'].iat[1])
         #supress errors for slice copying here...
         located = df5.iloc[:1]
+        located.drop(columns=['gridlon_0', 'gridlat_0'], inplace=True)
         located['station'] = row['station']
         #located['org_lat'] = row['lat']
         #located['org_lon'] = row['lon']
