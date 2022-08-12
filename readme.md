@@ -1,6 +1,6 @@
-# Coastal-Winds
+# nam-dataserver
 
-Coastal-Winds is a program used to download and collate data from the North American Mesoscale Forecast System (known as NAM)
+nam-dataserver is a program used to download and collate data from the North American Mesoscale Forecast System (known as NAM).  Principally, the system holds a copy of the latest forecast on disk and responds to request for specific data.
 
 
 https://www.ncei.noaa.gov/products/weather-climate-models/north-american-mesoscale
@@ -8,9 +8,9 @@ https://www.ncei.noaa.gov/products/weather-climate-models/north-american-mesosca
 ## Dependencies
 
 This program depends on a number of packages, namely the pynio package for interacting with grib2 files.  This 
-package can only run on a linux computer using the anaconda 'conda-forge' environment.
+package can only run on a **linux computer** using the anaconda 'conda-forge' environment.
 
-Setup instructions are:
+## Installation
 
 1.  Find the most current anaconda release on https://www.anaconda.com/products/distribution .  Use curl in your 
 terminal to download the file and install. 
