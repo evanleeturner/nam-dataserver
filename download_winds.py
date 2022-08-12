@@ -1,8 +1,6 @@
 
-import xarray as xr
 import pandas as pd
 import urllib.request
-import lxml
 import os
 import time
 import glob
@@ -24,7 +22,7 @@ def download_latest():
     #cleanup all existing files for space savings...
 
     logging.debug("Changing directory to downloaded_data/latest ")
-    os.chdir('downloaded_data/latest')
+    os.chdir('/home/eturner/nam-dataserver/downloaded_data/latest')
 
 
 

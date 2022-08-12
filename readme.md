@@ -33,6 +33,14 @@ conda install -c anaconda xarray
 conda install -c anaconda pandas
 pip3 install lxml
 ````
+
+In order for the sytem to maintain a current download of the NAM forcast you will need to install the program in the crontab.  
+Add this line to activate your conda environment in the crontab and to download the latest wind files:
+
+````bash
+source /home/eturner/anaconda3/bin/activate pynio_env; python3 /home/eturner/nam-dataserver/download_winds.py
+````
+
 ## Usage
 
 ```python
