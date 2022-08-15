@@ -1,0 +1,10 @@
+pyproject.toml
+setup.cfg
+setup.py
+examples/__init__.py
+examples/twdb/__init__.py
+examples/twdb/twdb-txblend-winds.py
+namdataserver.egg-info/PKG-INFO
+namdataserver.egg-info/SOURCES.txt
+namdataserver.egg-info/dependency_links.txt
+namdataserver.egg-info/top_level.txt
