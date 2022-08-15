@@ -1,3 +1,4 @@
+#!/home/eturner/anaconda3/envs/pyn_env/bin/python3
 import pandas as pd
 import urllib.request
 import os
