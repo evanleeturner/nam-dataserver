@@ -10,7 +10,7 @@ import numpy as np
 
 pd.options.mode.chained_assignment = None  # default='warn' cuts down on a lot of warning printing...
 
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s :: %(levelname)s :: %(message)s')
+logging.basicConfig(level=logging.INFO, format='%(asctime)s :: %(levelname)s :: %(message)s')
 
 
 #product for the 218 12k grid with 3hourly winds, taken from the main website here:

@@ -10,8 +10,9 @@ import numpy as np
 from namdataserver import download_latest
 
 def fetch_twdb(filename,directory):
+    print ("my directory is", os.getcwd())
     logging.info("Entering fetch_twdb with filename {filename}".format(filename={filename}))
-    twdb_stations = pd.read_csv('NAMwinds.latlist.csv')
+    twdb_stations = pd.read_csv('examples/twdb/NAMwinds.latlist.csv')
     logging.debug("Read twdb station file with head \n {twdb_stations}".format(twdb_stations=twdb_stations))
     f = os.path.join(directory, filename)
     ds = xr.open_dataset(f,engine='pynio')
@@ -50,7 +51,7 @@ def fetch_twdb(filename,directory):
     winds = pd.concat(arrays)
     winds.to_csv('/home/eturner/nam-dataserver/downloaded_data/'+filename+'.csv',index=False)
 
-download_latest('218')
+#download_latest('218')
 
 
 
