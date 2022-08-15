@@ -58,9 +58,11 @@ def download_latest(model='218'):
     #logic to see if we need to clear out old files...
     files = glob.glob('*.grb2')
     if files:
-        if file_prefix in files:
+        if last_file[:-4] in files:
             logging.info("Found the same date and time in our current repository already, skipping download...".format(files=files))
             return
+        else:
+            logging.debug("Did not locate {last_file} in our repository - follows we need to download fresh set, remove existing...".format(last_file=last_file[:-4]))
         logging.debug("Found grb2 files for deletion: {files}".format(files=files))
         for f in files:
             try:
