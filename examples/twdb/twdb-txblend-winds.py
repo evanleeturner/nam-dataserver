@@ -11,7 +11,7 @@ from namdataserver import download_latest
 
 def fetch_twdb(filename,directory):
     logging.info("Entering fetch_twdb with filename {filename}".format(filename={filename}))
-    twdb_stations = pd.read_csv('/home/eturner/nam-dataserver/NAMwinds.latlist.csv')
+    twdb_stations = pd.read_csv('NAMwinds.latlist.csv')
     logging.debug("Read twdb station file with head \n {twdb_stations}".format(twdb_stations=twdb_stations))
     f = os.path.join(directory, filename)
     ds = xr.open_dataset(f,engine='pynio')

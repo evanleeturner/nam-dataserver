@@ -10,7 +10,7 @@ import numpy as np
 
 pd.options.mode.chained_assignment = None  # default='warn'
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s :: %(levelname)s :: %(message)s')
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s :: %(levelname)s :: %(message)s')
 
 
 #product for the 218 12k grid with 3hourly winds, taken from the main website here:
@@ -58,6 +58,9 @@ def download_latest(model='218'):
     #logic to see if we need to clear out old files...
     files = glob.glob('*.grb2')
     if files:
+        if file_prefix in files:
+            logging.info("Found the same date and time in our current repository already, skipping download...".format(files=files))
+            return
         logging.debug("Found grb2 files for deletion: {files}".format(files=files))
         for f in files:
             try:
