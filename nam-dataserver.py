@@ -11,31 +11,6 @@ import numpy as np
 pd.options.mode.chained_assignment = None  # default='warn'
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s :: %(levelname)s :: %(message)s')
-#!pip3 install lxml  Need to install this...
-
-def wind_uv_to_dir(U,V):
-    """
-    Calculates the wind direction from the u and v component of wind.
-    Takes into account the wind direction coordinates is different than the
-    trig unit circle coordinate. If the wind directin is 360 then returns zero
-    (by %360)
-    Inputs:
-      U = west/east direction (wind from the west is positive, from the east is negative)
-      V = south/noth direction (wind from the south is positive, from the north is negative)
-    """
-    WDIR= (270-np.rad2deg(np.arctan2(V,U)))%360
-    return WDIR
-
-def wind_uv_to_spd(U,V):
-    """
-    Calculates the wind speed from the u and v wind components
-    Inputs:
-      U = west/east direction (wind from the west is positive, from the east is negative)
-      V = south/noth direction (wind from the south is positive, from the north is negative)
-    """
-    #convert to mph from mps with constant 2.23694
-    WSPD = np.sqrt(np.square(U)+np.square(V)) * 2.23694
-    return WSPD
 
 
 #product for the 218 12k grid with 3hourly winds, taken from the main website here:
