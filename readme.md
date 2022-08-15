@@ -1,6 +1,6 @@
 # nam-dataserver
 
-Do you need NAM data for your model, but only a small slice?  Annoyed with accessing Grib files just to grab a few records?  You are in luck!  Nam-dataserver is a program used to download and collate data from the North American Mesoscale Forecast System (known as NAM).  Principally, the system holds a copy of the latest forecast on disk and responds to request for specific data.  Actions you can create is to collate slices of NAM data in an automated setting.  Nam-dataserver is built on the conda-forge (linux only) package pynio to open grib files in a python way.
+Do you need NAM data for your model, but only a small slice?  Are you having to access large numbers of Grib files just to grab a few records?  You are in luck!  Nam-dataserver is a program used to download and collate data from the North American Mesoscale Forecast System (known as NAM).  Principally, the system holds a copy of the latest forecast on disk and responds to request for specific data.  Actions you can create is to collate slices of NAM data in an automated setting.  Nam-dataserver is built on the conda-forge (linux only) package pynio to open grib files in a python way.
 
 The impitus of this code package was to collate a small amount of wind foreast data (340 total stations) to feed into a legacy hydrographic model along the Texas coast.  
 
