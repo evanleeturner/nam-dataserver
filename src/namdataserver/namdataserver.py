@@ -26,8 +26,8 @@ def download_latest(model='218'):
     logging.debug("Entering function download_latest()")
     #cleanup all existing files for space savings...
 
-    logging.debug("Changing directory to downloaded_data/latest ")
-    os.chdir('/home/eturner/nam-dataserver/downloaded_data/latest')
+    #logging.debug("Changing directory to downloaded_data/latest ")
+    #os.chdir('/home/eturner/nam-dataserver/downloaded_data/latest')
 
 
 
@@ -77,7 +77,7 @@ def download_latest(model='218'):
     index = 0
     for i in range(53):
         st2 = time.time()  #our program start time...
-        our_file=str(url_base+our_month+our_day+file_prefix+'_'+str(index).zfill(3)+file_post)
+        our_file=str('downloaded_data/latest/'+url_base+our_month+our_day+file_prefix+'_'+str(index).zfill(3)+file_post)
         logging.info("Fetching file {file} ...".format(file=our_file))
         urllib.request.urlretrieve(url_base+our_month+our_day+file_prefix+'_'+str(index).zfill(3)+file_post, filename=file_prefix+'_'+str(i).zfill(3)+file_post)
         # get the end time
