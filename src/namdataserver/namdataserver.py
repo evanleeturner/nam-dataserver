@@ -8,7 +8,7 @@ import logging
 import xarray as xr
 import numpy as np
 
-pd.options.mode.chained_assignment = None  # default='warn'
+pd.options.mode.chained_assignment = None  # default='warn' cuts down on a lot of warning printing...
 
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s :: %(levelname)s :: %(message)s')
 
@@ -79,7 +79,7 @@ def download_latest(model='218'):
         st2 = time.time()  #our program start time...
         our_file=str(url_base+our_month+our_day+file_prefix+'_'+str(index).zfill(3)+file_post)
         logging.info("Fetching file {file} ...".format(file=our_file))
-        urllib.request.urlretrieve(url_base+our_month+our_day+file_prefix+'_'+str(index).zfill(3)+file_post, filename='downloaded_data/latest/'+file_prefix+'_'+str(i).zfill(3)+file_post)
+        urllib.request.urlretrieve(url_base+our_month+our_day+file_prefix+'_'+str(index).zfill(3)+file_post, filename='downloaded_data/latest/'+file_prefix+'_'+str(index).zfill(3)+file_post)
         # get the end time
         et = time.time()
         # get the execution time
