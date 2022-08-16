@@ -52,7 +52,7 @@ def fetch_file(url, file, tries=5):
         except:
             logging.warning("Failed to download file {file} from {url}".format(file=file,url=url))
 
-    return 
+    return
 
 
 def download_latest(model='218'):
@@ -73,7 +73,7 @@ def download_latest(model='218'):
     #os.chdir('/home/eturner/nam-dataserver/downloaded_data/latest')
 
 
-    
+
     our_month = fetch_html(url_base)
     logging.debug("Latest month folder: {our_month}".format(our_month=our_month))
     #repeat procedure for latest forecast of the month...
@@ -86,7 +86,7 @@ def download_latest(model='218'):
     file_prefix = last_file[:-13]  #boil down the last file name to just the file prefix, etc. 'nam_218_20220806_1800'
 
     file_post = '.grb2'
-    
+
     folder = root_dir+'downloaded_data/latest/'
     #logic to see if we need to clear out old files...
     files = glob.glob(folder+'*.grb2',)
@@ -112,7 +112,6 @@ def download_latest(model='218'):
     st = time.time()  #our program start time...
     #download all of the grib files... this could take a while
     index = 0
-    return
     for i in range(53):
         time.sleep(1)
         st2 = time.time()  #our program start time...
