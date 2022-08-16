@@ -8,13 +8,80 @@ import logging
 import xarray as xr
 import numpy as np
 from pathlib import Path
+import faulthandler
+import sys
+
+#faulthandler.enable(file=sys.stderr, all_threads=True)
+#faulthandler.dump_traceback(file=sys.stderr, all_threads=True)
 
 pd.options.mode.chained_assignment = None  # default='warn' cuts down on a lot of warning printing...
 
 logging.basicConfig(format='%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
     datefmt='%Y-%m-%d:%H:%M:%S',
-    level=logging.INFO)
+    level=logging.DEBUG)
+# Python program to find MD5 hash value of a file
+import hashlib
 
+def hash_finder(filename,directory):
+    file = os.path.join(directory, filename)
+    logging.debug("Performing hash operation on {file}".format(file=file))
+    md5_hash = hashlib.md5()
+    with open(file,"rb") as f:
+        # Read and update hash in chunks of 4K
+        for byte_block in iter(lambda: f.read(4096),b""):
+            md5_hash.update(byte_block)
+
+    return (md5_hash.hexdigest())
+
+
+def match_grb(grb_file,directory,match_list,gps_list,output_folder):
+    logging.info("Entering match_grb() with filename {filename}".format(filename={grb_file}))
+    f = os.path.join(directory, grb_file)
+    try:
+        ds = xr.open_dataset(f,engine='pynio')
+    except:
+        loggin.error("CRITICAL Error: Could not open {grb_file} for processing.".format(grb_file=grb_file))
+        return -1
+    logging.debug("Openned {grb_file} for processing.".format(grb_file=grb_file))
+
+    ds =ds.get(match_list)  #parse grb for the parameter list
+    logging.debug("Sliced values for columns of interest: {match_list}".format(match_list=match_list))
+    df = ds.to_dataframe()
+    logging.debug("Converted grb2 slice to dataframe...")
+    winds = pd.DataFrame()
+    arrays = []
+
+    #need to add testing to make sure gps_list has columns lat,lon, station
+    for index, row in gps_list.iterrows():
+        #logging.debug("searching for... {a}, {b}, {c}".format(a=row['station'],b=row["lat"], c=row['lon']))
+        #print(row["station"], row["lat"], row['lon'])
+        df2 = df[df['gridlat_0'] < (row['lat']+.001)]
+        df3 = df2[df2['gridlat_0'] > (row['lat'] - .001)]
+        df4 = df3[df3['gridlon_0'] < (row['lon'] + .01)]
+        df5 = df4[df4['gridlon_0'] > (row['lon'] - .01)]
+        row_1=df5.iloc[0]
+
+        #logging.debug("found {len} matches with row 1 as: {lat} , {lon}".format(len=len(df5),lat=df5['gridlat_0'].iat[0], lon=df5['gridlon_0'].iat[0]))
+        #print ("row two as ",df5['gridlat_0'].iat[1], df5['gridlon_0'].iat[1])
+        #supress errors for slice copying here...
+        located = df5.iloc[:1]
+        located.drop(columns=['gridlon_0', 'gridlat_0'], inplace=True)
+        located['station'] = row['station']
+        #located['org_lat'] = row['lat']
+        #located['org_lon'] = row['lon']
+        #located['speed'] = wind_uv_to_spd(located['UGRD_P0_L103_GLC0'].iat[0],located['VGRD_P0_L103_GLC0'].iat[0])
+        #located['dir'] = wind_uv_to_dir(located['UGRD_P0_L103_GLC0'].iat[0],located['VGRD_P0_L103_GLC0'].iat[0])
+        arrays.append(located)
+
+
+    winds = pd.DataFrame()
+    winds = pd.concat(arrays)
+    logging.debug("Writing to compressed csv with xz compression.")
+    fout = os.path.join(output_folder, grb_file[:-5]+'.csv.xz')
+    try:
+        winds.to_csv(fout,index=False)
+    except:
+        logging.error("CRITICAL Error: could not write output file {file}".format(file=fout))
 
 
 #product for the 218 12k grid with 3hourly winds, taken from the main website here:
@@ -39,11 +106,15 @@ def fetch_html(url,tries=5):
     else:
         df = html[0]
         df.dropna(how='all', inplace=True)
+        #columns = df.columns
+
+        #df.sort_values(by='Name', inplace=True)
+
         last_file = df.iloc[-1,0]
         return  last_file
 
 def fetch_file(url, file, tries=5):
-    logging.info("Fetching file {file} ...".format(file=file))
+    logging.info("Fetching file {url}".format(url=url))
 
     for i in range(tries):
         try:
@@ -109,6 +180,13 @@ def download_latest(model='218'):
 
 
 
+    #fetch the md5sum file from NAM folder so we can process.
+    #use the last file as method to find md5sum file Name
+    md5_name = 'md5sum.'+our_day[:-1]
+    fetch_file(url_base+our_month+our_day+md5_name, 'downloaded_data/latest/'+md5_name)
+    #open md5 listing for reading
+    md5_hashes = pd.read_csv('downloaded_data/latest/'+md5_name)
+
     st = time.time()  #our program start time...
     #download all of the grib files... this could take a while
     index = 0
@@ -116,7 +194,12 @@ def download_latest(model='218'):
         time.sleep(1)
         st2 = time.time()  #our program start time...
         our_file=str(url_base+our_month+our_day+file_prefix+'_'+str(index).zfill(3)+file_post)
-        fetch_file(url_base+our_month+our_day+file_prefix+'_'+str(index).zfill(3)+file_post, 'downloaded_data/latest/'+file_prefix+'_'+str(index).zfill(3)+file_post)
+        local_name=str(file_prefix+'_'+str(index).zfill(3)+file_post)
+        fetch_file(url_base+our_month+our_day+file_prefix+'_'+str(index).zfill(3)+file_post, 'downloaded_data/latest/'+local_name)
+        ourhash = hash_finder(file_prefix+'_'+str(index).zfill(3)+file_post,'downloaded_data/latest/')
+        logging.info('File {local_name} has md5hash {ourhash}'.format(local_name=local_name,ourhash=ourhash))
+        print(md5_hashes[0].str.contains(ourhash).any())
+
         # get the end time	# get the end time
         et = time.time()
         # get the execution time
