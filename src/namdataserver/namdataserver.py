@@ -113,15 +113,32 @@ def fetch_html(url,tries=5):
         last_file = df.iloc[-1,0]
         return  last_file
 
-def fetch_file(url, file, tries=5):
+def fetch_file(url, file, hashfile=None, tries=5):
+    if hashfile is None:
+        print ("did not detect a hashfile...")
+    else:
+        print ("our hashfile is ",hashfile)
+        md5_hashes = pd.read_csv(hashfile)
+        first_column = md5_hashes.iloc[:, 0]
+
     logging.info("Fetching file {url}".format(url=url))
 
     for i in range(tries):
         try:
             urllib.request.urlretrieve(url,filename=file)
-            break
         except:
             logging.warning("Failed to download file {file} from {url}".format(file=file,url=url))
+
+        if hashfile is not None:
+            ourhash = hash_finder(file,'')
+            logging.info('File {local_name} has md5hash {ourhash}'.format(local_name=file,ourhash=ourhash))
+
+            if first_column.str.contains(ourhash).any():
+                logging.debug("Our hash matches the NAM metadata, we have the correct file - exiting fetch_file()")
+                break
+            else:
+                logging.debug("Our hash DOES NOT match the NAM metadata, the file was not complete, retry download...")
+                
 
     return
 
@@ -185,7 +202,6 @@ def download_latest(model='218'):
     md5_name = 'md5sum.'+our_day[:-1]
     fetch_file(url_base+our_month+our_day+md5_name, 'downloaded_data/latest/'+md5_name)
     #open md5 listing for reading
-    md5_hashes = pd.read_csv('downloaded_data/latest/'+md5_name)
 
     st = time.time()  #our program start time...
     #download all of the grib files... this could take a while
@@ -195,10 +211,8 @@ def download_latest(model='218'):
         st2 = time.time()  #our program start time...
         our_file=str(url_base+our_month+our_day+file_prefix+'_'+str(index).zfill(3)+file_post)
         local_name=str(file_prefix+'_'+str(index).zfill(3)+file_post)
-        fetch_file(url_base+our_month+our_day+file_prefix+'_'+str(index).zfill(3)+file_post, 'downloaded_data/latest/'+local_name)
-        ourhash = hash_finder(file_prefix+'_'+str(index).zfill(3)+file_post,'downloaded_data/latest/')
-        logging.info('File {local_name} has md5hash {ourhash}'.format(local_name=local_name,ourhash=ourhash))
-        print(md5_hashes[0].str.contains(ourhash).any())
+        fetch_file(url_base+our_month+our_day+file_prefix+'_'+str(index).zfill(3)+file_post, 'downloaded_data/latest/'+local_name, 'downloaded_data/latest/'+md5_name)
+
 
         # get the end time	# get the end time
         et = time.time()
