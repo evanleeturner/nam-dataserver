@@ -51,7 +51,7 @@ def fetch_twdb(filename,directory):
     winds = pd.concat(arrays)
     winds.to_csv('/home/eturner/nam-dataserver/downloaded_data/'+filename+'.csv',index=False)
 
-#download_latest('218')
+download_latest()
 
 
 
@@ -59,6 +59,8 @@ directory = '/home/eturner/nam-dataserver/downloaded_data/latest'
 for filename in os.listdir(directory):
     f = os.path.join(directory, filename)
     # checking if it is a file
+    if filename == 'info':
+        continue
     if os.path.isfile(f):
         fetch_twdb(filename,directory)
 

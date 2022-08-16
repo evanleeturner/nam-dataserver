@@ -10,11 +10,49 @@ import numpy as np
 
 pd.options.mode.chained_assignment = None  # default='warn' cuts down on a lot of warning printing...
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s :: %(levelname)s :: %(message)s')
+logging.basicConfig(format='%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
+    datefmt='%Y-%m-%d:%H:%M:%S',
+    level=logging.INFO)
+
 
 
 #product for the 218 12k grid with 3hourly winds, taken from the main website here:
 #https://www.ncei.noaa.gov/products/weather-climate-models/north-american-mesoscale
+
+def fetch_html(url,tries=5):
+    """
+        Function fetches url for number of tries (default 5), returning the last value from the first column.
+    """
+    logging.info("Fetching html for {url}".format(url=url))
+    for i in range(tries):
+        try:
+            html = pd.read_html(url)
+            break
+        except:
+            logging.warning("Failed to read {url}...".format(url=url))
+
+    if html is None:
+        logging.error("CRITICAL ERROR - could not download {url}".format(url=url))
+        return
+
+    else:
+        df = html[0]
+        df.dropna(how='all', inplace=True)
+        last_file = df.iloc[-1,0]
+        return  last_file
+
+def fetch_file(url, file, tries=5):
+    logging.info("Fetching file {file} ...".format(file=file))
+
+    for i in range(tries):
+        try:
+            urllib.request.urlretrieve(url,filename=file)
+            break
+        except:
+            logging.warning("Failed to download file {file} from {url}".format(file=file,url=url))
+
+    return 
+
 
 def download_latest(model='218'):
     if (model == '218'):
@@ -30,26 +68,15 @@ def download_latest(model='218'):
     #os.chdir('/home/eturner/nam-dataserver/downloaded_data/latest')
 
 
-
-    logging.debug("Fetching html for {url_base}".format(url_base=url_base))
-    html_buff = pd.read_html(url_base)  #download the base page for forecast months
-    monthly_forecasts= html_buff[0]
-    monthly_forecasts.dropna(how='all', inplace=True)
-    our_month = monthly_forecasts.iloc[-1,0]  #grabs the very last forecast month..  eg. '202208/'
+    
+    our_month = fetch_html(url_base)
     logging.debug("Latest month folder: {our_month}".format(our_month=our_month))
     #repeat procedure for latest forecast of the month...
-    logging.debug("Fetching html for {url}".format(url=our_month))
-    html_buff = pd.read_html(url_base+our_month)  #download the base page for forecast months
-    daily_forecasts= html_buff[0]
-    daily_forecasts.dropna(how='all', inplace=True)
-    our_day = daily_forecasts.iloc[-1,0]  #grabs the very last forecast day..  eg. '20220806/'
+    our_day = fetch_html(url_base+our_month) #grabs the very last forecast day..  eg. '20220806/'
     logging.debug("Latest day folder: {our_day}".format(our_day=our_day))
     #repeat to find the last run hourly forecast in the list..
-    logging.debug("Fetching html for {url}".format(url=our_day))
-    html_buff = pd.read_html(url_base+our_month+our_day)
-    hourly_forecasts= html_buff[0]
-    hourly_forecasts.dropna(how='all', inplace=True)
-    last_file = hourly_forecasts.iloc[-1,0]
+    logging.info("Fetching html for {url}".format(url=our_day))
+    last_file = fetch_html(url_base+our_month+our_day)
     logging.debug("Latest file in list: {last_file}".format(last_file=last_file))
     file_prefix = last_file[:-13]  #boil down the last file name to just the file prefix, etc. 'nam_218_20220806_1800'
 
@@ -76,11 +103,12 @@ def download_latest(model='218'):
     #download all of the grib files... this could take a while
     index = 0
     for i in range(53):
+        time.sleep(1)
         st2 = time.time()  #our program start time...
         our_file=str(url_base+our_month+our_day+file_prefix+'_'+str(index).zfill(3)+file_post)
         logging.info("Fetching file {file} ...".format(file=our_file))
-        urllib.request.urlretrieve(url_base+our_month+our_day+file_prefix+'_'+str(index).zfill(3)+file_post, filename='downloaded_data/latest/'+file_prefix+'_'+str(index).zfill(3)+file_post)
-        # get the end time
+        fetch_file(url_base+our_month+our_day+file_prefix+'_'+str(index).zfill(3)+file_post, 'downloaded_data/latest/'+file_prefix+'_'+str(index).zfill(3)+file_post)
+        # get the end time	# get the end time
         et = time.time()
         # get the execution time
         elapsed_time = et - st2
