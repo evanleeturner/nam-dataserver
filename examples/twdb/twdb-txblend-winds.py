@@ -54,7 +54,7 @@ def fetch_twdb(filename,directory):
 download_latest()
 
 
-
+"""
 directory = '/home/eturner/nam-dataserver/downloaded_data/latest'
 for filename in os.listdir(directory):
     f = os.path.join(directory, filename)
@@ -63,5 +63,5 @@ for filename in os.listdir(directory):
         continue
     if os.path.isfile(f):
         fetch_twdb(filename,directory)
-
+"""
 #fetch_twdb('nam_218_20220806_1800_000.grb2','/home/eturner/nam-dataserver/downloaded_data/latest/')
