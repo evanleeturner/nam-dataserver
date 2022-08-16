@@ -40,7 +40,7 @@ def match_grb(grb_file,directory,match_list,gps_list,output_folder):
     try:
         ds = xr.open_dataset(f,engine='pynio')
     except:
-        loggin.error("CRITICAL Error: Could not open {grb_file} for processing.".format(grb_file=grb_file))
+        logging.error("CRITICAL Error: Could not open {grb_file} for processing.".format(grb_file=grb_file))
         return -1
     logging.debug("Openned {grb_file} for processing.".format(grb_file=grb_file))
 

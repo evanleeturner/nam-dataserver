@@ -23,7 +23,7 @@ values = ["UGRD_P0_L103_GLC0","VGRD_P0_L103_GLC0"]
 for filename in os.listdir(latest):
     f = os.path.join(latest, filename)
     # checking if it is a file
-    if filename == 'info': #skip our metadata file in the directory.
+    if filename == 'info' or "md5sum" in filename: #skip our metadata files in the directory.
         continue
     if os.path.isfile(f):
         match_grb(filename,latest,values,twdb_stations,processed)
