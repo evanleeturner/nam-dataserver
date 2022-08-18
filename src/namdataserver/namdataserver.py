@@ -114,6 +114,9 @@ def fetch_html(url,tries=5):
         return  last_file
 
 def fetch_file(url, file, hashfile=None, tries=5):
+    pwd = os.getcwd()  #locate our working directory
+    logging.debug("Entering fetch_file() from working directory {pwd} to fetch file {file} from url {url}"
+                    .format(pwd=pwd,file=file,url=url))
     if hashfile is None:
         print ("did not detect a hashfile...")
     else:
@@ -145,7 +148,7 @@ def fetch_file(url, file, hashfile=None, tries=5):
 
 def download_latest(model='218'):
     home = str(Path.home())  #logic to find our home directory for cronscripts...
-
+    
     root_dir = home+"/nam-dataserver/"
 
     if (model == '218'):
@@ -200,7 +203,7 @@ def download_latest(model='218'):
     #fetch the md5sum file from NAM folder so we can process.
     #use the last file as method to find md5sum file Name
     md5_name = 'md5sum.'+our_day[:-1]
-    fetch_file(url_base+our_month+our_day+md5_name, 'downloaded_data/latest/'+md5_name)
+    fetch_file(url_base+our_month+our_day+md5_name, root_dir+'downloaded_data/latest/'+md5_name)
     #open md5 listing for reading
 
     st = time.time()  #our program start time...
@@ -211,7 +214,7 @@ def download_latest(model='218'):
         st2 = time.time()  #our program start time...
         our_file=str(url_base+our_month+our_day+file_prefix+'_'+str(index).zfill(3)+file_post)
         local_name=str(file_prefix+'_'+str(index).zfill(3)+file_post)
-        fetch_file(url_base+our_month+our_day+file_prefix+'_'+str(index).zfill(3)+file_post, 'downloaded_data/latest/'+local_name, 'downloaded_data/latest/'+md5_name)
+        fetch_file(url_base+our_month+our_day+file_prefix+'_'+str(index).zfill(3)+file_post, root_dir+'downloaded_data/latest/'+local_name, 'downloaded_data/latest/'+md5_name)
 
 
         # get the end time	# get the end time

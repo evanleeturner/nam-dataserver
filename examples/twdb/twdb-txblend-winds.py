@@ -11,14 +11,14 @@ from namdataserver import download_latest
 from namdataserver import match_grb
 
 download_latest()
-twdb_stations = pd.read_csv('examples/twdb/NAMwinds.latlist.csv')
-logging.debug("Read twdb station file with head \n {twdb_stations}".format(twdb_stations=twdb_stations))
 
 latest = '/home/eturner/nam-dataserver/downloaded_data/latest'
 processed = '/home/eturner/nam-dataserver/downloaded_data/twdb/'
 values = ["UGRD_P0_L103_GLC0","VGRD_P0_L103_GLC0"]
-
-
+home = "/home/eturner"
+root_dir = home+"/nam-dataserver/"
+twdb_stations = pd.read_csv(root_dir+'examples/twdb/NAMwinds.latlist.csv')
+logging.debug("Read twdb station file with head \n {twdb_stations}".format(twdb_stations=twdb_stations))
 
 for filename in os.listdir(latest):
     f = os.path.join(latest, filename)
