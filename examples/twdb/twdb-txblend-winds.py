@@ -8,7 +8,7 @@ import logging
 import xarray as xr
 import numpy as np
 from namdataserver import download_latest
-from namdataserver import match_grb
+from namdataserver import match_grb, make_tarfile, read_TWDB_NAM_csv, Convert_TWDB,Print_Winds_TXBLEND_FMT
 
 download_latest()
 
@@ -28,6 +28,6 @@ for filename in os.listdir(latest):
     if os.path.isfile(f):
         match_grb(filename,latest,values,twdb_stations,processed)
 
-Convert_TWDB('nam_218_20220814_1800',"","twdb-winds-test","NAMwinds.latlist.csv")
+Convert_TWDB(processed,"/var/www/html/bays_estuaries/NAM-WINDS/",root_dir+"tmp_working",root_dir+"examples/twdb/NAMwinds.latlist.csv")
 
 #fetch_twdb('nam_218_20220806_1800_000.grb2','/home/eturner/nam-dataserver/downloaded_data/latest/')

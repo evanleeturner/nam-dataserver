@@ -36,6 +36,7 @@ conda activate pynio
 conda install -c anaconda xarray
 conda install -c anaconda pandas
 pip3 install lxml
+pip3 install tabulate
 ````
 
 In order for the sytem to maintain a current download of the NAM forcast you will need to install the program in the crontab.  

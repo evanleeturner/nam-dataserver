@@ -10,7 +10,11 @@ import numpy as np
 from pathlib import Path
 import faulthandler
 import sys
-from wind_calcs import *
+from .wind_calcs import *
+import datetime
+import functools
+import tarfile
+import tabulate
 
 #faulthandler.enable(file=sys.stderr, all_threads=True)
 #faulthandler.dump_traceback(file=sys.stderr, all_threads=True)
@@ -38,6 +42,12 @@ def hash_finder(filename,directory):
 def match_grb(grb_file,directory,match_list,gps_list,output_folder):
     logging.info("Entering match_grb() with filename {filename}".format(filename={grb_file}))
     f = os.path.join(directory, grb_file)
+    fout = os.path.join(output_folder, grb_file[:-5]+'.csv.xz')
+    
+    if os.path.isfile(fout):
+        logging.info("File already exists for {} , quitting.".format(fout))
+        return
+    
     try:
         ds = xr.open_dataset(f,engine='pynio')
     except:
@@ -78,7 +88,6 @@ def match_grb(grb_file,directory,match_list,gps_list,output_folder):
     winds = pd.DataFrame()
     winds = pd.concat(arrays)
     logging.debug("Writing to compressed csv with xz compression.")
-    fout = os.path.join(output_folder, grb_file[:-5]+'.csv.xz')
     try:
         winds.to_csv(fout,index=False)
     except:
@@ -359,10 +368,15 @@ def make_tarfile(output_filename, source_dir):
     Method is a simple wrapper for tarfile library to create a tar.gz out of an entire directory.
     """
     logging.debug("Entering make_tarfile() with output {} and source {}".format(output_filename, source_dir))
-    with tarfile.open(output_filename, "w:gz") as tar:
-        tar.add(source_dir, arcname=os.path.basename(source_dir))
+    org_dir = os.getcwd()
+
+    os.chdir(source_dir)
+    
+    with tarfile.open(output_filename, "w:") as tar:
+        tar.add(".", arcname=os.path.basename("."))
     logging.info("Wrote tarfile {}".format(output_filename))
 
+    os.chdir(org_dir)
 def read_TWDB_NAM_csv(fn,folder,columns_name, convertUVwinds=True):
     """
     Function reads a single file from disk in TWDB NAM CSV format.
@@ -417,7 +431,9 @@ def Convert_TWDB(import_folder,OUTPUT_folder,TMP_folder,windlist):
     try:
         files = os.listdir(import_folder)
     except:
-        logging.error("We could not open the folder specified {}".format(import_folder))
+        logging.error("We could not open the folder specified: {} from our current directory {}"
+                    .format(import_folder,os.getcwd()))
+        return
 
 
     data = []
