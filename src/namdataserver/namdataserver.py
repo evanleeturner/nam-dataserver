@@ -10,6 +10,7 @@ import numpy as np
 from pathlib import Path
 import faulthandler
 import sys
+from wind_calcs import *
 
 #faulthandler.enable(file=sys.stderr, all_threads=True)
 #faulthandler.dump_traceback(file=sys.stderr, all_threads=True)
@@ -141,14 +142,14 @@ def fetch_file(url, file, hashfile=None, tries=5):
                 break
             else:
                 logging.debug("Our hash DOES NOT match the NAM metadata, the file was not complete, retry download...")
-                
+
 
     return
 
 
 def download_latest(model='218'):
     home = str(Path.home())  #logic to find our home directory for cronscripts...
-    
+
     root_dir = home+"/nam-dataserver/"
 
     if (model == '218'):
@@ -232,3 +233,213 @@ def download_latest(model='218'):
     logging.info('Total download took: {elapsed_time} seconds'.format(elapsed_time=elapsed_time))
 
     logging.debug("Exiting function download_latest() successfully.")
+
+def Print_Winds_TXBLEND_FMT(bigframe, twdb_wind_list, outputfolder):
+    """
+    Function prints a large combined dataframe of wind data in the TXBLEND wndq format file.
+    This format was originally what was delivered to TWDB by the TAMU modeling group through a web interface
+
+    The function converts a dataframe that looks like this:
+
+    	station	Datetime	SPD_mph	DIR
+    0	twdb000	2022-08-14 18:00:00	15.128582	102.088511
+    1	twdb001	2022-08-14 18:00:00	14.335636	108.621309
+    2	twdb002	2022-08-14 18:00:00	15.999258	85.801288
+
+
+    Tp the ending file format with fixed with crazyness like this:
+
+    :*******Wind Data (3Hourly) Time in GMT****
+    **3-hourly winds from NAM  model for station  twdb135 28.248   -96.326
+     50, number of days of this record
+    2022 03 19 00   11.0  354.8
+    2022 03 19 03    9.4   12.2
+    2022 03 19 06   10.5   31.9
+    2022 03 19 09   16.5   48.4
+    2022 03 19 12   16.4   49.8
+    2022 03 19 15   15.8   60.4
+    2022 03 19 18   12.0   70.3
+
+    To accomplish this, we use a library called tabulate (https://pypi.org/project/tabulate/),
+    various string formats, and pandas.
+
+    """
+    logging.debug("Entering Print_Winds_TXBLEND_FMT() with bigframe of len {}, {}, {}"
+                  .format(len(bigframe),twdb_wind_list,outputfolder))
+    logging.info("Writing wind data in TXBLEND format: STARTING")
+
+    #error checking...
+    isdir = os.path.isdir(outputfolder)
+    if not isdir:
+        logging.info("The specified output directory {} does not exist.  Trying to create it now...".format(outputfolder))
+        try:
+            os.mkdir(outputfolder)
+            logging.info("Succesfully created {}".format(outputfolder))
+        except OSError as err:
+            logging.error("Could not create directory {}.  Quitting!  OS error: {0}".format(outputfolder,err))
+
+    isfile = os.path.isfile(twdb_wind_list)
+    if not isfile:
+        logging.error("CRITICAL: Could not locate valid TWDB wind listing file specified at {}  Exiting."
+                      .format(twdb_wind_list))
+        return
+
+
+
+    try:
+        listdf = pd.read_csv(twdb_wind_list)
+        logging.debug("Openned twdb_wind_list for reading with {} entries".format(len(listdf)))
+    except:
+        logging.error("CRITICAL: Pandas had critical error trying to open our wind list file {}"
+                      .format(twdb_wind_list))
+        return
+
+    #we expect to have a dataframe with these exact columns.  Otherwise lets quit out and respond why.
+    expected_columns = ['station', 'Datetime', 'SPD_mph', 'DIR']
+    logging.debug("Running check on our df columns {} to expected {}".format(bigframe.columns,expected_columns))
+
+    #some crazy lamba function testing to see if our columns are exactly the same.  I lifted this from:
+    #https://www.digitalocean.com/community/tutorials/how-to-compare-two-lists-in-python
+    if not functools.reduce(lambda x, y : x and y, map(lambda p, q: p == q,expected_columns,bigframe.columns), True):
+        logging.error("CRITICAL: Our dataframe columns are NOT what we expected.  What was passed in is {} \n We expected {}"
+                      .format(bigframe.columns,expected_columns))
+        return
+
+    for i in bigframe['station'].unique():
+        logging.debug("Processing station {}".format(i))
+        tmp = bigframe.loc[(bigframe['station'] == i)].copy()
+        logging.debug("Our sliced df has len {} and looks like {}".format(len(tmp),tmp.head(2)))
+        tmp['STRTIME'] = tmp['Datetime'].dt.strftime('%Y %m %d %H')
+        tmp['HOUR'] = tmp['Datetime'].dt.strftime('%H')
+
+        #drop any duplicates - if they exist...
+        tmp.drop_duplicates(subset=['Datetime'],inplace=True)
+
+
+        #some crazy slicing here to get only the 3-hourly wind data...
+        tmp  = tmp [(tmp['HOUR'] == '00') | (tmp['HOUR'] == '03')
+                    | (tmp['HOUR'] == '06') | (tmp['HOUR'] == '09')
+                   | (tmp['HOUR'] == '12') | (tmp['HOUR'] == '15')
+                | (tmp['HOUR'] == '18') | (tmp['HOUR'] == '21')]
+        #how many days are in the record??
+        count = int(len(tmp)/8)
+
+        tmp = tmp[['STRTIME', 'SPD_mph','DIR']]
+
+        series = listdf.loc[listdf['station'] == i].squeeze()
+        #need to separate the values from series to for python format print to work
+        lon = series['lon']
+        lat = series['lat']
+        #for help with format printing, check out https://www.w3schools.com/python/ref_string_format.asp
+        header_ln2 = "**3-hourly winds from NAM  model for station  {} {lat:.3f}   {lon:.3f}\n"
+        header_ln3 = str(count)+ " number of days of this record\n"
+
+
+        content = tabulate.tabulate(tmp.values.tolist(), tablefmt="plain", numalign="right",floatfmt=".1f",stralign="right")
+
+        mypath = os.path.join(outputfolder,i)
+        try:
+            f = open(mypath+".wndq", "w")
+        except:
+            logging.error("CRITICAL: could not write file {} ".format(mypath+".wndq"))
+            break
+        f.write("*******Wind Data (3Hourly) Time in GMT****\n")
+        f.write(header_ln2.format(i,lat=lat,lon=lon))
+        f.write(header_ln3)
+        f.write(content)
+        f.close()
+        logging.debug("Writing file {} COMPLETED".format(mypath+".wndq"))
+
+
+    logging.info("Print_Winds_TXBLEND_FMT() COMPLETE")
+    return
+
+def make_tarfile(output_filename, source_dir):
+    """
+    Method is a simple wrapper for tarfile library to create a tar.gz out of an entire directory.
+    """
+    logging.debug("Entering make_tarfile() with output {} and source {}".format(output_filename, source_dir))
+    with tarfile.open(output_filename, "w:gz") as tar:
+        tar.add(source_dir, arcname=os.path.basename(source_dir))
+    logging.info("Wrote tarfile {}".format(output_filename))
+
+def read_TWDB_NAM_csv(fn,folder,columns_name, convertUVwinds=True):
+    """
+    Function reads a single file from disk in TWDB NAM CSV format.
+
+    An example file "nam_218_20220814_1800_000.csv" would look like:
+
+    UGRD_P0_L103_GLC0,VGRD_P0_L103_GLC0,station
+    -6.6131005,1.416339,twdb000
+    -6.0731006,2.046339,twdb001
+    -7.1331005,-0.5236609,twdb002
+    -7.4331,1.036339,twdb003
+    -6.7131004,1.936339,twdb004
+    -5.8631005,2.2063391,twdb005
+    -5.3731003,2.376339,twdb006
+    -5.8531003,-1.2136608,twdb007
+    -7.8431005,0.2863391,twdb008
+    -8.1331005,1.8463391,twdb009
+    -7.1031003,2.616339,twdb010
+    """
+    try:
+        tmp = pd.read_csv(os.path.join (folder, fn))
+    except:
+        logging.error("read_TWDB_NAM_csv() CRITICAL: Failed to read file {} in folder {} \n exiting the program early!".format(fn, folder))
+        return -1
+    logging.debug("read_TWDB_NAM_csv() Detected the timestamp from file {} as {} {} {} {} {}"
+                  .format(fn,fn[8:12], fn[12:14], fn[14:16],fn[17:19], fn[23:25]))
+    #datetime requires integers, create datetime column from the filename and apply deltatime from hour
+    tmp['Datetime'] = datetime.datetime( int(fn[8:12]),int( fn[12:14]), int(fn[14:16]),int(fn[17:19])) +  datetime.timedelta(hours=int(fn[23:25]))
+
+    #our our columns winds in U and V components, if so process to mph and dir
+    if convertUVwinds:
+        #convert U and V to speedmph and dir - converting from mps to mph with constant 2.23694
+        tmp['SPD_mph'] = wind_uv_to_spd(tmp[columns_name[0]],tmp[columns_name[1]])* 2.23694
+        tmp['DIR'] = wind_uv_to_dir(tmp[columns_name[0]],tmp[columns_name[1]])
+        tmp.drop([columns_name[0],columns_name[1]], axis=1, inplace=True)
+
+
+    logging.debug("read_TWDB_NAM_csv() Our completed ingested file looks like: \n {}".format(tmp.head(2)))
+
+    return tmp
+
+def Convert_TWDB(import_folder,OUTPUT_folder,TMP_folder,windlist):
+    """
+    Function imports Wind data in csv format, using the filename to create a datetime index.
+    Filename follows the NOAA NAM formatting scheme where the datetime is embedded in the filename.
+    See the NOAA site: https://www.ncei.noaa.gov/products/weather-climate-models/north-american-mesoscale
+    """
+     #our U and V constants we are expecting from the files
+    U = 'UGRD_P0_L103_GLC0'
+    V= 'VGRD_P0_L103_GLC0'
+
+    try:
+        files = os.listdir(import_folder)
+    except:
+        logging.error("We could not open the folder specified {}".format(import_folder))
+
+
+    data = []
+    logging.info("Loading wind data from disk: STARTING")
+    for i in files:
+        tmp = read_TWDB_NAM_csv(i,import_folder,[U,V],convertUVwinds=True)
+        if tmp is None:
+            logging.error("Quitting abnormally, see errors from above")
+            return
+        else:
+            data.append(tmp)
+    logging.info("Loading wind data from disk: COMPLETED - with {} records".format(len(data)))
+
+
+    #combine the list of dataframes data[] into one giant frame...
+    df = pd.concat(data, axis=0)
+    df.sort_values(by=['Datetime'],inplace=True)
+    logging.debug("Created one dataframe with record length {} from {} to {}".format(len(df),df['Datetime'].min(),df['Datetime'].max()))
+    logging.debug("Our dataframe looks like: \n {} \n {}".format(df.head(2),df.tail(2)))
+
+    Print_Winds_TXBLEND_FMT(df,windlist,TMP_folder)
+    #add tar.gz operation for output_folder
+
+    outputfile = os.path.join(OUTPUT_folder,"twdbq.tar")
+    make_tarfile(outputfile, TMP_folder)

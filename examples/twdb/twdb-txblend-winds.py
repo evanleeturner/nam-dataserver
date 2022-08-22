@@ -28,4 +28,6 @@ for filename in os.listdir(latest):
     if os.path.isfile(f):
         match_grb(filename,latest,values,twdb_stations,processed)
 
+Convert_TWDB('nam_218_20220814_1800',"","twdb-winds-test","NAMwinds.latlist.csv")
+
 #fetch_twdb('nam_218_20220806_1800_000.grb2','/home/eturner/nam-dataserver/downloaded_data/latest/')
