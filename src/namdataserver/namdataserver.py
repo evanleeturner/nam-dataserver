@@ -27,7 +27,48 @@ logging.basicConfig(format='%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:
 # Python program to find MD5 hash value of a file
 import hashlib
 
-def BackFillNAM(starttime, endtime, model=218):
+def Locate_Closest_File(timestamp):
+    """
+    Method determins the most accurate NAM file for the exact timestamp.
+    
+    returns URL for NAM
+    
+    
+    """
+    file_prefix = "nam_218_"
+
+    first_file =  file_prefix+timestamp.strftime('%Y%m%d')
+    hour = int(timestamp.strftime('%H'))
+    #logic to find the most current 4-day model run hour
+    if hour < 6:
+        nam_H = 0
+        offset = hour
+    elif (hour >= 6)  and (hour < 12):
+        nam_H = 6
+        offset = hour - 6
+    elif (hour >= 12)  and (hour < 18):
+        nam_H = 12
+        offset = hour - 12
+    elif (hour >= 18)  and (hour <= 23):
+        nam_H = 18
+        offset = hour - 18
+    else:
+        logging.error("Something went terribly wrong with our hour {}".format(hour))
+    
+    #construct a file like this...nam_218_20220801_0000_000.grb2
+    first_file = first_file+"_"+str(nam_H).zfill(2)+"00_"+str(offset).zfill(3)+".grb2"
+    logging.debug("Our detected closest file to {} was {}".format(timestamp,first_file))
+
+    #construct the URL... will look like..
+    #https://www.ncei.noaa.gov/data/north-american-mesoscale-model/access/forecast/202208/20220801/nam_218_20220801_1200_000.grb2
+    url_base = 'https://www.ncei.noaa.gov/data/north-american-mesoscale-model/access/forecast/'
+    url = url_base +timestamp.strftime('%Y%m') + '/' + timestamp.strftime('%Y%m%d') + '/' + first_file
+
+    logging.debug("Constructed URL \n{}".format(url))
+    
+    return url
+
+def BackFillNAM(starttime, endtime, model='218'):
     """
     Function downloads a series of NAM files between two timeperiods, or from the most current model back n hours.
 
@@ -52,7 +93,35 @@ def BackFillNAM(starttime, endtime, model=218):
     nam_218_20220303_12_001    -  3/3/2022 13:00
     nam_218_20220303_12_002    -  3/3/2022 14:00
     """
+    
+    logging.debug("Entering BackFillNAM() with startime {} endtime {} model {}".format(starttime,endtime,model))
+    pwd = os.getcwd()  #locate our working directory
+    logging.debug("BackFillNAM() assuming our CWD is ./namdataserver .  Our CWD is: {}".format(pwd))
 
+    if (model == '218'):
+        file_prefix = 'NAM_218_'
+    else:
+        logging.error("Feature not implimented to download NAM model {model}".format(model=model))
+        return
+
+    fn= fetch_latestfile(model)
+    home = str(Path.home())  #logic to find our home directory for cronscripts...
+
+    root_dir = home+"/nam-dataserver/"
+    #logic to find time from NAM file name
+    latest = datetime.datetime(int(fn[8:12]), int(fn[12:14]), int(fn[14:16]),int(fn[17:19]))
+
+    if endtime > latest:
+        logging.warn("Detected that the requested enddate of {} is greater than the lastest file {} online.  Your data download will be incomplete".format(endtime,latest))
+        endtime = latest
+    
+    #I use while loops exeedinly rarely.  This is one instance where I feel approporate since it would be very difficult to construct a for loop
+    while starttime <= endtime:
+        url = Locate_Closest_File(starttime)
+        print("pretending to fetch url ",url)
+        fetch_file(url, root_dir+'downloaded_data/latest/'+url[94:])
+        starttime = starttime + datetime.timedelta(hours=1)
+    return
 
 def hash_finder(filename,directory):
     file = os.path.join(directory, filename)
