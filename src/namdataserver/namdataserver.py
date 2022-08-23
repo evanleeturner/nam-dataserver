@@ -27,6 +27,33 @@ logging.basicConfig(format='%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:
 # Python program to find MD5 hash value of a file
 import hashlib
 
+def BackFillNAM(starttime, endtime, model=218):
+    """
+    Function downloads a series of NAM files between two timeperiods, or from the most current model back n hours.
+
+    Taken from the NAM documentation (https://www.ncei.noaa.gov/products/weather-climate-models/north-american-mesoscale)
+    the NAM system updates (4/day: 00, 06, 12, 18UTC) with hourly forecasts.  To retrieve the most accurate past data, 
+    this method retrieves the most accurate forecast data for the time period in question within the 4/day runcycle of the 
+    model.
+
+    NOTE: All times are considered to be UTC.
+
+    Example:
+
+    BackFillNAM(startdate, enddate) - where startdate = "3/3/2022 8:00" and enddate="3/3/2022" 14:00.
+
+    Method downloads NAM files: 
+     
+    nam_218_20220303_06_002    -  3/3/2022 8:00
+    nam_218_20220303_06_003    -  3/3/2022 9:00
+    nam_218_20220303_06_004    -  3/3/2022 10:00
+    nam_218_20220303_06_005    -  3/3/2022 11:00
+    nam_218_20220303_12_000    -  3/3/2022 12:00
+    nam_218_20220303_12_001    -  3/3/2022 13:00
+    nam_218_20220303_12_002    -  3/3/2022 14:00
+    """
+
+
 def hash_finder(filename,directory):
     file = os.path.join(directory, filename)
     logging.debug("Performing hash operation on {file}".format(file=file))
@@ -155,8 +182,9 @@ def fetch_file(url, file, hashfile=None, tries=5):
 
     return
 
+def fetch_latestfile(model='218'):
+    logging.debug("Entering function fetch_latestfile()")
 
-def download_latest(model='218'):
     home = str(Path.home())  #logic to find our home directory for cronscripts...
 
     root_dir = home+"/nam-dataserver/"
@@ -167,14 +195,8 @@ def download_latest(model='218'):
         logging.error("Feature not implimented to download NAM model {model}".format(model=model))
         return
 
-    logging.debug("Entering function download_latest()")
-    #cleanup all existing files for space savings...
-
-    #logging.debug("Changing directory to downloaded_data/latest ")
-    #os.chdir('/home/eturner/nam-dataserver/downloaded_data/latest')
-
-
-
+    
+    #fetch months
     our_month = fetch_html(url_base)
     logging.debug("Latest month folder: {our_month}".format(our_month=our_month))
     #repeat procedure for latest forecast of the month...
@@ -184,8 +206,24 @@ def download_latest(model='218'):
     logging.info("Fetching html for {url}".format(url=our_day))
     last_file = fetch_html(url_base+our_month+our_day)
     logging.debug("Latest file in list: {last_file}".format(last_file=last_file))
-    file_prefix = last_file[:-13]  #boil down the last file name to just the file prefix, etc. 'nam_218_20220806_1800'
 
+    return last_file
+
+def download_latest(model='218'):
+    logging.debug("Entering function download_latest()")
+    home = str(Path.home())  #logic to find our home directory for cronscripts...
+
+    root_dir = home+"/nam-dataserver/"
+
+    if (model == '218'):
+        url_base = 'https://www.ncei.noaa.gov/data/north-american-mesoscale-model/access/forecast/'
+    else:
+        logging.error("Feature not implimented to download NAM model {model}".format(model=model))
+        return
+
+
+    last_file = fetch_latestfile()
+    file_prefix = last_file[:-13]  #boil down the last file name to just the file prefix, etc. 'nam_218_20220806_1800'
     file_post = '.grb2'
 
     folder = root_dir+'downloaded_data/latest/'
