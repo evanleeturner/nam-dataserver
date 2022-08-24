@@ -117,9 +117,13 @@ def BackFillNAM(starttime, endtime, model='218'):
     
     #I use while loops exeedinly rarely.  This is one instance where I feel approporate since it would be very difficult to construct a for loop
     while starttime <= endtime:
-        url = Locate_Closest_File(starttime)
-        print("pretending to fetch url ",url)
-        fetch_file(url, root_dir+'downloaded_data/latest/'+url[94:])
+        #logic to only download 3H winds since that is what TWDB needs, and  cuts down 2/3rds of files.  Later add methods to unify this with options.
+        hour = int(starttime.strftime('%H'))
+        remainder = hour % 3
+        if remainder == 0:
+            url = Locate_Closest_File(starttime)
+            fetch_file(url, root_dir+'downloaded_data/latest/'+url[94:])
+
         starttime = starttime + datetime.timedelta(hours=1)
     return
 
