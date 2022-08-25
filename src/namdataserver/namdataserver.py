@@ -15,17 +15,13 @@ import datetime
 import functools
 import tarfile
 import tabulate
-
-#faulthandler.enable(file=sys.stderr, all_threads=True)
-#faulthandler.dump_traceback(file=sys.stderr, all_threads=True)
-
-pd.options.mode.chained_assignment = None  # default='warn' cuts down on a lot of warning printing...
+import hashlib # Python program to find MD5 hash value of a file
+#pd.options.mode.chained_assignment = None  # default='warn' cuts down on a lot of warning printing...
 
 logging.basicConfig(format='%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
     datefmt='%Y-%m-%d:%H:%M:%S',
     level=logging.DEBUG)
-# Python program to find MD5 hash value of a file
-import hashlib
+
 
 def csv2pandas(*args, **kwargs):
     """Wrapper that attempts to do a pandas read_csv() and passes all arguments.
@@ -37,6 +33,10 @@ def csv2pandas(*args, **kwargs):
 
     This function requires packages: pandas, os, logging
 
+        :param args: arguments to pass to pandas
+        :type args: str
+        :param timestamp: keyword arguments to pass to pandas
+        :type timestamp: str
         :return: pandas.DataFrame if connection was successful
         :rtype: pandas.DataFrame
     """
@@ -66,18 +66,19 @@ def csv2pandas(*args, **kwargs):
     return df
 
 def Locate_Closest_File(timestamp):
-    """
-    Method determins the most accurate NAM file for the exact timestamp.
+    """Method determins the most accurate forecast NAM file for the exact timestamp.
 
-    returns URL for NAM
-
-
+        :param timestamp: time in UCT
+        :type timestamp: datetime.datetime
+        :return: filename in NAM syntax eg nam_218_20220801_0000_000.grb2
+        :rtype: str
     """
     file_prefix = "nam_218_"
 
     first_file =  file_prefix+timestamp.strftime('%Y%m%d')
     hour = int(timestamp.strftime('%H'))
     #logic to find the most current 4-day model run hour
+    #using integer logic to make much easier pasing
     if hour < 6:
         nam_H = 0
         offset = hour
@@ -97,29 +98,27 @@ def Locate_Closest_File(timestamp):
     first_file = first_file+"_"+str(nam_H).zfill(2)+"00_"+str(offset).zfill(3)+".grb2"
     logging.debug("Our detected closest file to {} was {}".format(timestamp,first_file))
 
-    #construct the URL... will look like..
-    #https://www.ncei.noaa.gov/data/north-american-mesoscale-model/access/forecast/202208/20220801/nam_218_20220801_1200_000.grb2
-    url_base = 'https://www.ncei.noaa.gov/data/north-american-mesoscale-model/access/forecast/'
-    url = url_base +timestamp.strftime('%Y%m') + '/' + timestamp.strftime('%Y%m%d') + '/' + first_file
+    return first_file
 
-    logging.debug("Constructed URL \n{}".format(url))
 
-    return url
+def BackFillNAM(starttime, endtime):
+    """Function downloads a series of NAM files between two timeperiods, or from
+    the most current model back n hours.
 
-def BackFillNAM(starttime, endtime, model='218'):
-    """
-    Function downloads a series of NAM files between two timeperiods, or from the most current model back n hours.
-
-    Taken from the NAM documentation (https://www.ncei.noaa.gov/products/weather-climate-models/north-american-mesoscale)
-    the NAM system updates (4/day: 00, 06, 12, 18UTC) with hourly forecasts.  To retrieve the most accurate past data,
-    this method retrieves the most accurate forecast data for the time period in question within the 4/day runcycle of the
+    Taken from the NAM documentation
+    (https://www.ncei.noaa.gov/products/weather-climate-models/north-american-mesoscale)
+    the NAM system updates (4/day: 00, 06, 12, 18UTC) with hourly forecasts.
+    To retrieve the most accurate past data, this method retrieves the most
+    accurate forecast data for the time period in question within the 4/day
+    runcycle of the
     model.
 
     NOTE: All times are considered to be UTC.
 
     Example:
 
-    BackFillNAM(startdate, enddate) - where startdate = "3/3/2022 8:00" and enddate="3/3/2022" 14:00.
+    BackFillNAM(startdate, enddate) - where startdate = "3/3/2022 8:00"
+    and enddate="3/3/2022" 14:00.
 
     Method downloads NAM files:
 
@@ -132,20 +131,18 @@ def BackFillNAM(starttime, endtime, model='218'):
     nam_218_20220303_12_002    -  3/3/2022 14:00
     """
 
+    file_prefix = 'NAM_218_'
     logging.debug("Entering BackFillNAM() with startime {} endtime {} model {}".format(starttime,endtime,model))
+
+
+
     pwd = os.getcwd()  #locate our working directory
-    logging.debug("BackFillNAM() assuming our CWD is ./namdataserver .  Our CWD is: {}".format(pwd))
-
-    if (model == '218'):
-        file_prefix = 'NAM_218_'
-    else:
-        logging.error("Feature not implimented to download NAM model {model}".format(model=model))
-        return
-
-    fn= fetch_latestfile(model)
+    logging.debug("BackFillNAM(): assuming our CWD is ~/namdataserver .  Our CWD is: {}".format(pwd))
     home = str(Path.home())  #logic to find our home directory for cronscripts...
+    root_dir = os.path.join(home,"nam-dataserver")
+    logging.debug("BackFillNAM(): Our root directory is {}".format(root_dir))
 
-    root_dir = home+"/nam-dataserver/"
+    fn = fetch_latestfile()  #fetching latest file from NAM website
     #logic to find time from NAM file name
     latest = datetime.datetime(int(fn[8:12]), int(fn[12:14]), int(fn[14:16]),int(fn[17:19]))
 
@@ -153,13 +150,25 @@ def BackFillNAM(starttime, endtime, model='218'):
         logging.warn("Detected that the requested enddate of {} is greater than the lastest file {} online.  Your data download will be incomplete".format(endtime,latest))
         endtime = latest
 
-    #I use while loops exeedinly rarely.  This is one instance where I feel approporate since it would be very difficult to construct a for loop
+    #I use while loops exeedinly rarely.
+    #This is one instance where I feel approporate since it would be
+    #timeconsuming to construct a for loop, but in the future could do this...
     while starttime <= endtime:
-        #logic to only download 3H winds since that is what TWDB needs, and  cuts down 2/3rds of files.  Later add methods to unify this with options.
+        #logic to only download 3H winds since that is what TWDB needs,
+        #and cuts down 2/3rds of files.
+        #Later add methods to unify this with options.
         hour = int(starttime.strftime('%H'))
         remainder = hour % 3
         if remainder == 0:
-            url = Locate_Closest_File(starttime)
+            first_file = Locate_Closest_File(starttime)
+            #construct the URL... will look like..
+            #https://www.ncei.noaa.gov/data/north-american-mesoscale-model/access/forecast/202208/20220801/nam_218_20220801_1200_000.grb2
+            url_base = 'https://www.ncei.noaa.gov/data/north-american-mesoscale-model/access/forecast/'
+            url = url_base +timestamp.strftime('%Y%m') + '/' + timestamp.strftime('%Y%m%d') + '/' + first_file
+
+            logging.debug("Constructed URL \n{}".format(url))
+
+            return url
             fetch_file(url, root_dir+'downloaded_data/latest/'+url[94:])
 
         starttime = starttime + datetime.timedelta(hours=1)
@@ -274,19 +283,25 @@ def fetch_file(url, file, hashfile=None, tries=5):
     logging.debug("Entering fetch_file() from working directory {pwd} to fetch file {file} from url {url}"
                     .format(pwd=pwd,file=file,url=url))
     if hashfile is None:
-        print ("did not detect a hashfile...")
+        logging.debug("fetch_file() not passed a hashfile")
     else:
-        print ("our hashfile is ",hashfile)
+        logging.debug("fetch_file() using hashfile {}".format(hashfile))
         md5_hashes = csv2pandas(hashfile)
         first_column = md5_hashes.iloc[:, 0]
 
     logging.info("Fetching file {url}".format(url=url))
 
+    st = time.time()  #our program start time...
     for i in range(tries):
         try:
             urllib.request.urlretrieve(url,filename=file)
         except:
             logging.warning("Failed to download file {file} from {url}".format(file=file,url=url))
+
+
+        # get the execution time
+        elapsed_time = time.time() - st
+        logging.info('Download took: {elapsed_time} seconds'.format(elapsed_time=elapsed_time))
 
         if hashfile is not None:
             ourhash = hash_finder(file,'')
@@ -383,19 +398,13 @@ def download_latest(model='218'):
         local_name=str(file_prefix+'_'+str(index).zfill(3)+file_post)
         fetch_file(url_base+our_month+our_day+file_prefix+'_'+str(index).zfill(3)+file_post, root_dir+'downloaded_data/latest/'+local_name, 'downloaded_data/latest/'+md5_name)
 
-
-        # get the end time	# get the end time
-        et = time.time()
-        # get the execution time
-        elapsed_time = et - st2
-        logging.info('Download took: {elapsed_time} seconds'.format(elapsed_time=elapsed_time))
         if index < 36:
             index+=1
         else:
             index+=3
 
     ft = time.time()
-    elapsed_time = et - st
+    elapsed_time = ft - st
     logging.info('Total download took: {elapsed_time} seconds'.format(elapsed_time=elapsed_time))
 
     logging.debug("Exiting function download_latest() successfully.")
