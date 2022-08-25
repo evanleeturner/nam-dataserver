@@ -540,7 +540,7 @@ def read_TWDB_NAM_csv(fn,folder,columns_name, convertUVwinds=True):
     -7.1031003,2.616339,twdb010
     """
 
-    tmp = pd.csv2pandas(os.path.join (folder, fn))
+    tmp = csv2pandas(os.path.join (folder, fn))
 
     logging.debug("read_TWDB_NAM_csv() Detected the timestamp from file {} as {} {} {} {} {}"
                   .format(fn,fn[8:12], fn[12:14], fn[14:16],fn[17:19], fn[23:25]))
