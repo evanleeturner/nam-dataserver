@@ -2,7 +2,7 @@
 import os
 import logging
 import pandas as pd
-from namdataserver import download_latest, BackFillNAM,Open_Pandas_CSV
+from namdataserver import download_latest, BackFillNAM,csv2pandas
 from namdataserver import match_grb, make_tarfile, read_TWDB_NAM_csv, Convert_TWDB,Print_Winds_TXBLEND_FMT
 """
 This is the Texas Water Development Board (TWDB) running example for nam-dataserver.
@@ -47,7 +47,7 @@ TWDB_Dir = os.path.join(root_dir,"examples", "twdb")
 download_latest()
 
 #open the TWDB station listing and create a pandas dataframe
-twdb_stations = Open_Pandas_CSV(os.path.join(TWDB_Dir ,"NAMwinds.latlist.csv"))
+twdb_stations = csv2pandas(os.path.join(TWDB_Dir ,"NAMwinds.latlist.csv"))
 
 logging.debug("Read twdb station file with head \n {twdb_stations}".format(twdb_stations=twdb_stations))
 
@@ -56,4 +56,3 @@ match_grb(latest_dir,NAM_column_listings,twdb_stations,processed_dir)
 logging.info("Converting stripped NAM values from csv to fixed width format.")
 Convert_TWDB(processed_dir,output_dir,root_dir+"tmp_working",twdb_stations)
 logging.info("Completed TWDB nam-dataserver script")
-

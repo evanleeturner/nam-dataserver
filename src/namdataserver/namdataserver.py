@@ -27,21 +27,40 @@ logging.basicConfig(format='%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:
 # Python program to find MD5 hash value of a file
 import hashlib
 
-def Open_Pandas_CSV(filename):
+def csv2pandas(*args, **kwargs):
+    """Wrapper that attempts to do a pandas read_csv() and passes all arguments.
+    Purpose of wrapper is to give detailed debugging to logging.
+    Check https://pandas.pydata.org/docs/reference/api/pandas.read_csv.html
+    for documentation on options for pd.read_csv()
 
-    isfile = os.path.isfile(filename)
+    V.1.0 Evan L. Turner 08/25/2022
+
+    This function requires packages: pandas, os, logging
+
+        :return: pandas.DataFrame if connection was successful
+        :rtype: pandas.DataFrame
+    """
+
+    if kwargs:
+        logging.debug("Open_Pandas_CSV(): Attempting to open filename {} with arguments {}"
+                      .format(args[0],kwargs))
+    else:
+        logging.debug("Open_Pandas_CSV(): Attempting to open filename {} for reading".format(args[0]))
+
+    isfile = os.path.isfile(args[0])
     if not isfile:
-        logging.error("CRITICAL: Could not locate valid pandas csv file for reading {}  Exiting."
-                  .format(filename))
+        logging.error("Open_Pandas_CSV(): - CRITICAL - file {} was not found.  Our working directory is: {}"
+                  .format(args[0], os.getcwd()))
         return
 
     try:
-        df = pd.read_csv(filename)
-        logging.debug("Openned {} for reading with {} entries".format(filename,len(filename)))
+        df = pd.read_csv(*args, **kwargs)
+        logging.debug("Openned {} for reading with {} entries".format(args[0],len(df)))
     except BaseException as e:
         logging.error('The exception: {}'.format(e))
-        logging.error("CRITICAL: Pandas had critical error trying to open {}"
-                  .format(filename))
+        logging.error("CRITICAL: Pandas threw critical error trying to open {} "
+                  .format(args[0]))
+        logging.error('The exception from pandas library was: {}'.format(e))
         return
 
     return df
@@ -258,7 +277,7 @@ def fetch_file(url, file, hashfile=None, tries=5):
         print ("did not detect a hashfile...")
     else:
         print ("our hashfile is ",hashfile)
-        md5_hashes = pd.read_csv(hashfile)
+        md5_hashes = csv2pandas(hashfile)
         first_column = md5_hashes.iloc[:, 0]
 
     logging.info("Fetching file {url}".format(url=url))
@@ -520,11 +539,9 @@ def read_TWDB_NAM_csv(fn,folder,columns_name, convertUVwinds=True):
     -8.1331005,1.8463391,twdb009
     -7.1031003,2.616339,twdb010
     """
-    try:
-        tmp = pd.read_csv(os.path.join (folder, fn))
-    except:
-        logging.error("read_TWDB_NAM_csv() CRITICAL: Failed to read file {} in folder {} \n exiting the program early!".format(fn, folder))
-        return -1
+
+    tmp = pd.csv2pandas(os.path.join (folder, fn))
+
     logging.debug("read_TWDB_NAM_csv() Detected the timestamp from file {} as {} {} {} {} {}"
                   .format(fn,fn[8:12], fn[12:14], fn[14:16],fn[17:19], fn[23:25]))
     #datetime requires integers, create datetime column from the filename and apply deltatime from hour
