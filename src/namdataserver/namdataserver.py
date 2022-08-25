@@ -16,7 +16,8 @@ import functools
 import tarfile
 import tabulate
 import hashlib # Python program to find MD5 hash value of a file
-#pd.options.mode.chained_assignment = None  # default='warn' cuts down on a lot of warning printing...
+
+pd.options.mode.chained_assignment = None  # default='warn' cuts down on a lot of warning printing...
 
 logging.basicConfig(format='%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
     datefmt='%Y-%m-%d:%H:%M:%S',
@@ -286,8 +287,9 @@ def fetch_file(url, file, hashfile=None, tries=5):
         logging.debug("fetch_file() not passed a hashfile")
     else:
         logging.debug("fetch_file() using hashfile {}".format(hashfile))
-        md5_hashes = csv2pandas(hashfile)
+        md5_hashes = csv2pandas(hashfile,header=None)
         first_column = md5_hashes.iloc[:, 0]
+        logging.debug("Hashfile looks like \n{}".format(first_column.head(1)))
 
 
 
@@ -312,8 +314,11 @@ def fetch_file(url, file, hashfile=None, tries=5):
                 logging.debug("Our hash matches the NAM metadata, we have the correct file - exiting fetch_file()")
                 break
             else:
-                logging.WARNING("Our hash DOES NOT match the NAM metadata, the file was not complete, retrying download...")
+                logging.warning("Our hash DOES NOT match the NAM metadata, the file was not complete, retrying download...")
 
+        else:
+            #we didn't get a hashfile to analyze - assuming our download is A-OK
+            break
         if i == (tries - 1):
             has_error = True
             logging.error("CRITICAL - could not download file after {} tries.".format(tries-1))
@@ -397,7 +402,6 @@ def download_latest(model='218'):
     #download all of the grib files... this could take a while
     index = 0
     for i in range(53):
-        time.sleep(1)
         st2 = time.time()  #our program start time...
         our_file=str(url_base+our_month+our_day+file_prefix+'_'+str(index).zfill(3)+file_post)
         local_name=str(file_prefix+'_'+str(index).zfill(3)+file_post)
