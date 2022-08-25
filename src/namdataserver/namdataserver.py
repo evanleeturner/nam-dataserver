@@ -196,12 +196,12 @@ def match_grb(folder,NAM_column_listings,match_df,processed_dir):
             match_grb_file(filename,folder,NAM_column_listings,match_df,processed_dir)
 
 def match_grb_file(grb_file,directory,match_list,gps_list,output_folder):
-    logging.info("Entering match_grb() with filename {filename}".format(filename={grb_file}))
+    logging.info("match_grb_file(): Matching values with filename {filename}".format(filename={grb_file}))
     f = os.path.join(directory, grb_file)
     fout = os.path.join(output_folder, grb_file[:-5]+'.csv.xz')
 
     if os.path.isfile(fout):
-        logging.info("File already exists for {} , quitting.".format(fout))
+        logging.debug("match_grb_file(): A grb match file already exists for {} as {}.".format(grb_file,fout))
         return
 
     try:
@@ -478,7 +478,7 @@ def Print_Winds_TXBLEND_FMT(bigframe, twdb_wind_list, outputfolder):
     for i in bigframe['station'].unique():
         logging.debug("Processing station {}".format(i))
         tmp = bigframe.loc[(bigframe['station'] == i)].copy()
-        logging.debug("Our sliced df has len {} and looks like {}".format(len(tmp),tmp.head(2)))
+        logging.debug("Our sliced df has len {} and looks like \n{}".format(len(tmp),tmp.head(2)))
         tmp['STRTIME'] = tmp['Datetime'].dt.strftime('%Y %m %d %H')
         tmp['HOUR'] = tmp['Datetime'].dt.strftime('%H')
 
@@ -573,7 +573,7 @@ def read_TWDB_NAM_csv(fn,folder,columns_name, convertUVwinds=True):
         tmp.drop([columns_name[0],columns_name[1]], axis=1, inplace=True)
 
 
-    logging.debug("read_TWDB_NAM_csv() Our completed ingested file looks like: \n {}".format(tmp.head(2)))
+    logging.debug("read_TWDB_NAM_csv() Our completed ingested file looks like: \n{}".format(tmp.head(2)))
 
     return tmp
 
@@ -611,7 +611,7 @@ def Convert_TWDB(import_folder,OUTPUT_folder,TMP_folder,windlist_df):
     df = pd.concat(data, axis=0)
     df.sort_values(by=['Datetime'],inplace=True)
     logging.debug("Created one dataframe with record length {} from {} to {}".format(len(df),df['Datetime'].min(),df['Datetime'].max()))
-    logging.debug("Our dataframe looks like: \n {} \n {}".format(df.head(2),df.tail(2)))
+    logging.debug("Our dataframe looks like: \n{} \n{}".format(df.head(2),df.tail(2)))
 
     Print_Winds_TXBLEND_FMT(df,windlist_df,TMP_folder)
     #add tar.gz operation for output_folder
