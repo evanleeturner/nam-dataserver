@@ -27,13 +27,31 @@ logging.basicConfig(format='%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:
 # Python program to find MD5 hash value of a file
 import hashlib
 
+def Open_Pandas_CSV(filename):
+
+    isfile = os.path.isfile(filename)
+    if not isfile:
+        logging.error("CRITICAL: Could not locate valid pandas csv file for reading {}  Exiting."
+                  .format(filename))
+        return
+
+    try:
+        df = pd.read_csv(filename)
+        logging.debug("Openned {} for reading with {} entries".format(filename,len(listdf)))
+    except:
+        logging.error("CRITICAL: Pandas had critical error trying to open {}"
+                  .format(filename))
+        return
+
+    return df
+
 def Locate_Closest_File(timestamp):
     """
     Method determins the most accurate NAM file for the exact timestamp.
-    
+
     returns URL for NAM
-    
-    
+
+
     """
     file_prefix = "nam_218_"
 
@@ -54,7 +72,7 @@ def Locate_Closest_File(timestamp):
         offset = hour - 18
     else:
         logging.error("Something went terribly wrong with our hour {}".format(hour))
-    
+
     #construct a file like this...nam_218_20220801_0000_000.grb2
     first_file = first_file+"_"+str(nam_H).zfill(2)+"00_"+str(offset).zfill(3)+".grb2"
     logging.debug("Our detected closest file to {} was {}".format(timestamp,first_file))
@@ -65,7 +83,7 @@ def Locate_Closest_File(timestamp):
     url = url_base +timestamp.strftime('%Y%m') + '/' + timestamp.strftime('%Y%m%d') + '/' + first_file
 
     logging.debug("Constructed URL \n{}".format(url))
-    
+
     return url
 
 def BackFillNAM(starttime, endtime, model='218'):
@@ -73,8 +91,8 @@ def BackFillNAM(starttime, endtime, model='218'):
     Function downloads a series of NAM files between two timeperiods, or from the most current model back n hours.
 
     Taken from the NAM documentation (https://www.ncei.noaa.gov/products/weather-climate-models/north-american-mesoscale)
-    the NAM system updates (4/day: 00, 06, 12, 18UTC) with hourly forecasts.  To retrieve the most accurate past data, 
-    this method retrieves the most accurate forecast data for the time period in question within the 4/day runcycle of the 
+    the NAM system updates (4/day: 00, 06, 12, 18UTC) with hourly forecasts.  To retrieve the most accurate past data,
+    this method retrieves the most accurate forecast data for the time period in question within the 4/day runcycle of the
     model.
 
     NOTE: All times are considered to be UTC.
@@ -83,8 +101,8 @@ def BackFillNAM(starttime, endtime, model='218'):
 
     BackFillNAM(startdate, enddate) - where startdate = "3/3/2022 8:00" and enddate="3/3/2022" 14:00.
 
-    Method downloads NAM files: 
-     
+    Method downloads NAM files:
+
     nam_218_20220303_06_002    -  3/3/2022 8:00
     nam_218_20220303_06_003    -  3/3/2022 9:00
     nam_218_20220303_06_004    -  3/3/2022 10:00
@@ -93,7 +111,7 @@ def BackFillNAM(starttime, endtime, model='218'):
     nam_218_20220303_12_001    -  3/3/2022 13:00
     nam_218_20220303_12_002    -  3/3/2022 14:00
     """
-    
+
     logging.debug("Entering BackFillNAM() with startime {} endtime {} model {}".format(starttime,endtime,model))
     pwd = os.getcwd()  #locate our working directory
     logging.debug("BackFillNAM() assuming our CWD is ./namdataserver .  Our CWD is: {}".format(pwd))
@@ -114,7 +132,7 @@ def BackFillNAM(starttime, endtime, model='218'):
     if endtime > latest:
         logging.warn("Detected that the requested enddate of {} is greater than the lastest file {} online.  Your data download will be incomplete".format(endtime,latest))
         endtime = latest
-    
+
     #I use while loops exeedinly rarely.  This is one instance where I feel approporate since it would be very difficult to construct a for loop
     while starttime <= endtime:
         #logic to only download 3H winds since that is what TWDB needs, and  cuts down 2/3rds of files.  Later add methods to unify this with options.
@@ -138,16 +156,24 @@ def hash_finder(filename,directory):
 
     return (md5_hash.hexdigest())
 
+def match_grb(folder,NAM_column_listings,match_df,processed_dir):
+    for filename in os.listdir(folder):
+        f = os.path.join(latest, filename)
+        # checking if it is a file
+        if filename == 'info' or "md5sum" in filename: #skip our metadata files in the directory.
+            continue
+        if os.path.isfile(f):
+            match_grb_file(filename,folder,NAM_column_listings,match_df,processed_dir)
 
-def match_grb(grb_file,directory,match_list,gps_list,output_folder):
+def match_grb_file(grb_file,directory,match_list,gps_list,output_folder):
     logging.info("Entering match_grb() with filename {filename}".format(filename={grb_file}))
     f = os.path.join(directory, grb_file)
     fout = os.path.join(output_folder, grb_file[:-5]+'.csv.xz')
-    
+
     if os.path.isfile(fout):
         logging.info("File already exists for {} , quitting.".format(fout))
         return
-    
+
     try:
         ds = xr.open_dataset(f,engine='pynio')
     except:
@@ -268,7 +294,7 @@ def fetch_latestfile(model='218'):
         logging.error("Feature not implimented to download NAM model {model}".format(model=model))
         return
 
-    
+
     #fetch months
     our_month = fetch_html(url_base)
     logging.debug("Latest month folder: {our_month}".format(our_month=our_month))
@@ -398,21 +424,7 @@ def Print_Winds_TXBLEND_FMT(bigframe, twdb_wind_list, outputfolder):
         except OSError as err:
             logging.error("Could not create directory {}.  Quitting!  OS error: {0}".format(outputfolder,err))
 
-    isfile = os.path.isfile(twdb_wind_list)
-    if not isfile:
-        logging.error("CRITICAL: Could not locate valid TWDB wind listing file specified at {}  Exiting."
-                      .format(twdb_wind_list))
-        return
 
-
-
-    try:
-        listdf = pd.read_csv(twdb_wind_list)
-        logging.debug("Openned twdb_wind_list for reading with {} entries".format(len(listdf)))
-    except:
-        logging.error("CRITICAL: Pandas had critical error trying to open our wind list file {}"
-                      .format(twdb_wind_list))
-        return
 
     #we expect to have a dataframe with these exact columns.  Otherwise lets quit out and respond why.
     expected_columns = ['station', 'Datetime', 'SPD_mph', 'DIR']
@@ -446,7 +458,7 @@ def Print_Winds_TXBLEND_FMT(bigframe, twdb_wind_list, outputfolder):
 
         tmp = tmp[['STRTIME', 'SPD_mph','DIR']]
 
-        series = listdf.loc[listdf['station'] == i].squeeze()
+        series = twdb_wind_list.loc[twdb_wind_list['station'] == i].squeeze()
         #need to separate the values from series to for python format print to work
         lon = series['lon']
         lat = series['lat']
@@ -482,7 +494,7 @@ def make_tarfile(output_filename, source_dir):
     org_dir = os.getcwd()
 
     os.chdir(source_dir)
-    
+
     with tarfile.open(output_filename, "w:") as tar:
         tar.add(".", arcname=os.path.basename("."))
     logging.info("Wrote tarfile {}".format(output_filename))
@@ -529,7 +541,7 @@ def read_TWDB_NAM_csv(fn,folder,columns_name, convertUVwinds=True):
 
     return tmp
 
-def Convert_TWDB(import_folder,OUTPUT_folder,TMP_folder,windlist):
+def Convert_TWDB(import_folder,OUTPUT_folder,TMP_folder,windlist_df):
     """
     Function imports Wind data in csv format, using the filename to create a datetime index.
     Filename follows the NOAA NAM formatting scheme where the datetime is embedded in the filename.
@@ -565,7 +577,7 @@ def Convert_TWDB(import_folder,OUTPUT_folder,TMP_folder,windlist):
     logging.debug("Created one dataframe with record length {} from {} to {}".format(len(df),df['Datetime'].min(),df['Datetime'].max()))
     logging.debug("Our dataframe looks like: \n {} \n {}".format(df.head(2),df.tail(2)))
 
-    Print_Winds_TXBLEND_FMT(df,windlist,TMP_folder)
+    Print_Winds_TXBLEND_FMT(df,windlist_df,TMP_folder)
     #add tar.gz operation for output_folder
 
     outputfile = os.path.join(OUTPUT_folder,"twdbq.tar")
