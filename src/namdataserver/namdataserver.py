@@ -252,7 +252,7 @@ def match_grb_file(grb_file,directory,match_list,gps_list,output_folder):
 #product for the 218 12k grid with 3hourly winds, taken from the main website here:
 #https://www.ncei.noaa.gov/products/weather-climate-models/north-american-mesoscale
 
-def fetch_html(url,tries=5):
+def fetch_html(url,tries=6):
     """
         Function fetches url for number of tries (default 5), returning the last value from the first column.
     """
@@ -289,15 +289,16 @@ def fetch_file(url, file, hashfile=None, tries=5):
         md5_hashes = csv2pandas(hashfile)
         first_column = md5_hashes.iloc[:, 0]
 
-    logging.info("Fetching file {url}".format(url=url))
+
 
     st = time.time()  #our program start time...
+    has_error=False
     for i in range(tries):
+        logging.info("Fetching file {} try # {} ...".format(url,i))
         try:
             urllib.request.urlretrieve(url,filename=file)
         except:
             logging.warning("Failed to download file {file} from {url}".format(file=file,url=url))
-
 
         # get the execution time
         elapsed_time = time.time() - st
@@ -305,15 +306,19 @@ def fetch_file(url, file, hashfile=None, tries=5):
 
         if hashfile is not None:
             ourhash = hash_finder(file,'')
-            logging.info('File {local_name} has md5hash {ourhash}'.format(local_name=file,ourhash=ourhash))
+            logging.debug('File {local_name} has md5hash {ourhash}'.format(local_name=file,ourhash=ourhash))
 
             if first_column.str.contains(ourhash).any():
                 logging.debug("Our hash matches the NAM metadata, we have the correct file - exiting fetch_file()")
                 break
             else:
-                logging.debug("Our hash DOES NOT match the NAM metadata, the file was not complete, retry download...")
+                logging.WARNING("Our hash DOES NOT match the NAM metadata, the file was not complete, retrying download...")
 
-
+        if i == (tries - 1):
+            has_error = True
+            logging.error("CRITICAL - could not download file after {} tries.".format(tries-1))
+    if not has_error:
+        logging.info("Successfully downloaded file.")
     return
 
 def fetch_latestfile(model='218'):
