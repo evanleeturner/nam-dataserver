@@ -1,5 +1,7 @@
 #!/home/eturner/anaconda3/envs/pyn_env/bin/python3
 import os
+import logging
+import pandas as pd
 from namdataserver import download_latest, BackFillNAM,Open_Pandas_CSV
 from namdataserver import match_grb, make_tarfile, read_TWDB_NAM_csv, Convert_TWDB,Print_Winds_TXBLEND_FMT
 """
@@ -34,23 +36,24 @@ BackFillNAM(starttime,endtime)
 #setting up our paths for running the script.
 logging.info("Stating main TWDB NAM download script")
 home = "/home/eturner"    #must set this to the correct path!
-root_dir = os.path.join(home+"/nam-dataserver")
-latest_dir = os.path.join(root_dir,"/downloaded_data/latest")
-processed_dir = os.path.join(root_dir,"/downloaded_data/twdb/")
+root_dir = os.path.join(home,"nam-dataserver")
+latest_dir = os.path.join(root_dir,"downloaded_data" ,"latest")
+processed_dir = os.path.join(root_dir,"downloaded_data", "twdb")
 NAM_column_listings = ["UGRD_P0_L103_GLC0","VGRD_P0_L103_GLC0"]
 output_dir = "/var/www/html/bays_estuaries/NAM-WINDS/"
-TWDB_Dir = os.path.join(root_dir,"/examples/twdb/")
+TWDB_Dir = os.path.join(root_dir,"examples", "twdb")
 
-filename,latest_dir,NAM_column_listings,match_df,processed_dir)
 #download latest NAM files
 download_latest()
 
 #open the TWDB station listing and create a pandas dataframe
 twdb_stations = Open_Pandas_CSV(os.path.join(TWDB_Dir ,"NAMwinds.latlist.csv"))
+
 logging.debug("Read twdb station file with head \n {twdb_stations}".format(twdb_stations=twdb_stations))
 
 logging.info("Begin stripping needed data from NAM files using match_grb().")
-match_grb(latest_dir,NAM_column_listings,match_df,processed_dir)
+match_grb(latest_dir,NAM_column_listings,twdb_stations,processed_dir)
 logging.info("Converting stripped NAM values from csv to fixed width format.")
-Convert_TWDB(processed,output_dir,root_dir+"tmp_working",twdb_stations)
+Convert_TWDB(processed_dir,output_dir,root_dir+"tmp_working",twdb_stations)
 logging.info("Completed TWDB nam-dataserver script")
+

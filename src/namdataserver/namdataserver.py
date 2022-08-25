@@ -37,8 +37,9 @@ def Open_Pandas_CSV(filename):
 
     try:
         df = pd.read_csv(filename)
-        logging.debug("Openned {} for reading with {} entries".format(filename,len(listdf)))
-    except:
+        logging.debug("Openned {} for reading with {} entries".format(filename,len(filename)))
+    except BaseException as e:
+        logging.error('The exception: {}'.format(e))
         logging.error("CRITICAL: Pandas had critical error trying to open {}"
                   .format(filename))
         return
@@ -158,7 +159,7 @@ def hash_finder(filename,directory):
 
 def match_grb(folder,NAM_column_listings,match_df,processed_dir):
     for filename in os.listdir(folder):
-        f = os.path.join(latest, filename)
+        f = os.path.join(folder, filename)
         # checking if it is a file
         if filename == 'info' or "md5sum" in filename: #skip our metadata files in the directory.
             continue
