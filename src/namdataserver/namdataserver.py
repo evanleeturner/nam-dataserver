@@ -280,7 +280,7 @@ def fetch_latestfile(model='218'):
     last_file = fetch_html(url_base+our_month+our_day)
     logging.debug("Latest file in list: {last_file}".format(last_file=last_file))
 
-    return last_file
+    return last_file, our_day, our_month
 
 def download_latest(model='218'):
     logging.debug("Entering function download_latest()")
@@ -295,7 +295,7 @@ def download_latest(model='218'):
         return
 
 
-    last_file = fetch_latestfile()
+    last_file, our_day, our_month = fetch_latestfile()
     file_prefix = last_file[:-13]  #boil down the last file name to just the file prefix, etc. 'nam_218_20220806_1800'
     file_post = '.grb2'
 

@@ -11,11 +11,11 @@ import datetime
 from namdataserver import download_latest, BackFillNAM
 from namdataserver import match_grb, make_tarfile, read_TWDB_NAM_csv, Convert_TWDB,Print_Winds_TXBLEND_FMT
 
-starttime = datetime.datetime(2022,7,2,8,0)
-endtime = datetime.datetime(2022,8,25,10,0)
-#download_latest()
+download_latest()
 
-
+#only need this once.. we backfilled 50 days to prime the system
+#starttime = datetime.datetime(2022,7,2,8,0)
+#endtime = datetime.datetime(2022,8,25,10,0)
 #BackFillNAM(starttime,endtime)
 
 latest = '/home/eturner/nam-dataserver/downloaded_data/latest'
