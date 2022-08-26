@@ -253,36 +253,88 @@ def match_grb_file(grb_file,directory,match_list,gps_list,output_folder):
 #product for the 218 12k grid with 3hourly winds, taken from the main website here:
 #https://www.ncei.noaa.gov/products/weather-climate-models/north-american-mesoscale
 
-def fetch_html(url,tries=6):
+def fetch_lasthtmllink(url,tries=6):
+    """Function fetches html from url for number of tries (default 5),
+       returning the last html link from the first column.
+
+       This method is used for http NOAA NAM folder access like:
+       https://www.ncei.noaa.gov/data/north-american-mesoscale-model/access/forecast/202208/
+
+       where the example html looks like:
+
+
+       Name	Last modified	Size	Description
+       Parent Directory	 	-
+       20220801/	2022-08-03 09:35	-
+       20220802/	2022-08-04 14:21	-
+       20220803/	2022-08-05 08:35	-
+
+       And our program needs to know the last link (most current), in the listing.
+
+       :param url: http url link
+       :type url: str
+       :param tries: number of times to retry download
+       :type tries: int
+       :return: last link in html file eg. 20220803
+       :rtype: str
     """
-        Function fetches url for number of tries (default 5), returning the last value from the first column.
-    """
-    logging.info("Fetching html for {url}".format(url=url))
     for i in range(tries):
+        logging.info("fetch_lasthtmllink() try #{} starting for \n{url}".format(i,url))
         try:
             html = pd.read_html(url)
             break
-        except:
-            logging.warning("Failed to read {url}...".format(url=url))
+        except BaseException as e:
+            logging.warning("CRITCAL Failed to read {url}...".format(url=url))
+            logging.error('The exception from pandas library was: {}'.format(e))
+            return
 
     if html is None:
-        logging.error("CRITICAL ERROR - could not download {url}".format(url=url))
+        logging.error("CRITICAL ERROR - fetch_lasthtmllink() could not download \n{url}".format(url=url))
         return
 
     else:
+        logging.debug("Our fetched html looks like:\n{}".format(html.head(3)))
         df = html[0]
         df.dropna(how='all', inplace=True)
-        #columns = df.columns
-
-        #df.sort_values(by='Name', inplace=True)
-
         last_file = df.iloc[-1,0]
+        logging.info("fetch_lasthtmllink() completed successfully with {} .".format(last_file))
         return  last_file
 
-def fetch_file(url, file, hashfile=None, tries=5):
+def fetch_file(url, filename, hashfile=None, tries=5):
+    """Function downloads a file from url given number of tries,
+    additionally, function can apply a md5sum to the file given metadata
+    from attached hashfile.  File moved to filename on disk.
+
+    Example arguments:
+
+    Given a URL such as:
+
+    https://www.ncei.noaa.gov/data/north-american-mesoscale-model/access
+    /forecast/202208/20220824/nam_218_20220824_0000_000.grb2
+
+    with filename =  "nam_218_20220824_0000_000.grb2"
+    with hasfile = pandas.DataFrame
+
+
+    The system downloads the link to disk using default of tries, applying
+    haslib.hash_finder() to the downloaded file and string comparing to the
+    provided hashfile.  If file matches the hashfile the function exits 1
+
+    :param url: http url link
+    :type url: str
+    :param filename: file IO PATH
+    :type filename: str
+    :param hashfile: http url link
+    :type haslfile: str
+    :param tries: number of times to retry download
+    :type tries: int
+    :return: True for success, False for error
+    :rtype: bool
+
+    """
     pwd = os.getcwd()  #locate our working directory
-    logging.debug("Entering fetch_file() from working directory {pwd} to fetch file {file} from url {url}"
-                    .format(pwd=pwd,file=file,url=url))
+    logging.debug("fetch_file() starting from working directory {pwd} to fetch file {file} from url \n{url}"
+                    .format(pwd=pwd,file=filename,url=url))
     if hashfile is None:
         logging.debug("fetch_file() not passed a hashfile")
     else:
@@ -298,17 +350,19 @@ def fetch_file(url, file, hashfile=None, tries=5):
     for i in range(tries):
         logging.info("Fetching file {} try # {} ...".format(url,i))
         try:
-            urllib.request.urlretrieve(url,filename=file)
-        except:
-            logging.warning("Failed to download file {file} from {url}".format(file=file,url=url))
+            urllib.request.urlretrieve(url,filename=filename)
+        except BaseException as e:
+            logging.warning("Failed to download file {file} from \n{url}".format(file=file,url=url))
+            logging.warning('The exception from urllib library was: {}'.format(e))
+            return
 
         # get the execution time
         elapsed_time = time.time() - st
         logging.info('Download took: {elapsed_time} seconds'.format(elapsed_time=elapsed_time))
 
         if hashfile is not None:
-            ourhash = hash_finder(file,'')
-            logging.debug('File {local_name} has md5hash {ourhash}'.format(local_name=file,ourhash=ourhash))
+            ourhash = hash_finder(filename,'')
+            logging.debug('File {local_name} has md5hash {ourhash}'.format(local_name=filename,ourhash=ourhash))
 
             if first_column.str.contains(ourhash).any():
                 logging.debug("Our hash matches the NAM metadata, we have the correct file - exiting fetch_file()")
@@ -322,9 +376,12 @@ def fetch_file(url, file, hashfile=None, tries=5):
         if i == (tries - 1):
             has_error = True
             logging.error("CRITICAL - could not download file after {} tries.".format(tries-1))
+            return False
     if not has_error:
         logging.info("Successfully downloaded file.")
-    return
+        return True
+    else:
+        return False
 
 def fetch_latestfile(model='218'):
     logging.debug("Entering function fetch_latestfile()")
@@ -341,14 +398,14 @@ def fetch_latestfile(model='218'):
 
 
     #fetch months
-    our_month = fetch_html(url_base)
+    our_month = fetch_lasthtmllink(url_base)
     logging.debug("Latest month folder: {our_month}".format(our_month=our_month))
     #repeat procedure for latest forecast of the month...
-    our_day = fetch_html(url_base+our_month) #grabs the very last forecast day..  eg. '20220806/'
+    our_day = fetch_lasthtmllink(url_base+our_month) #grabs the very last forecast day..  eg. '20220806/'
     logging.debug("Latest day folder: {our_day}".format(our_day=our_day))
     #repeat to find the last run hourly forecast in the list..
     logging.info("Fetching html for {url}".format(url=our_day))
-    last_file = fetch_html(url_base+our_month+our_day)
+    last_file = fetch_lasthtmllink(url_base+our_month+our_day)
     logging.debug("Latest file in list: {last_file}".format(last_file=last_file))
 
     return last_file, our_day, our_month
@@ -395,18 +452,21 @@ def download_latest(model='218'):
     #fetch the md5sum file from NAM folder so we can process.
     #use the last file as method to find md5sum file Name
     md5_name = 'md5sum.'+our_day[:-1]
-    fetch_file(url_base+our_month+our_day+md5_name, root_dir+'downloaded_data/latest/'+md5_name)
+    success = fetch_file(url_base+our_month+our_day+md5_name, root_dir+'downloaded_data/latest/'+md5_name)
     #open md5 listing for reading
 
     st = time.time()  #our program start time...
     #download all of the grib files... this could take a while
     index = 0
+    has_error = False
     for i in range(53):
         st2 = time.time()  #our program start time...
         our_file=str(url_base+our_month+our_day+file_prefix+'_'+str(index).zfill(3)+file_post)
         local_name=str(file_prefix+'_'+str(index).zfill(3)+file_post)
-        fetch_file(url_base+our_month+our_day+file_prefix+'_'+str(index).zfill(3)+file_post, root_dir+'downloaded_data/latest/'+local_name, 'downloaded_data/latest/'+md5_name)
+        success = fetch_file(url_base+our_month+our_day+file_prefix+'_'+str(index).zfill(3)+file_post, root_dir+'downloaded_data/latest/'+local_name, 'downloaded_data/latest/'+md5_name)
 
+        if success == False:
+            has_error = True
         if index < 36:
             index+=1
         else:
@@ -416,7 +476,10 @@ def download_latest(model='218'):
     elapsed_time = ft - st
     logging.info('Total download took: {elapsed_time} seconds'.format(elapsed_time=elapsed_time))
 
-    logging.debug("Exiting function download_latest() successfully.")
+    if has_error:
+        logging.error("CRITICAL - our NAM forecast is incomplete!  ")
+    else:
+        logging.debug("download_latest() completed successfully.")
 
 def Print_Winds_TXBLEND_FMT(bigframe, twdb_wind_list, outputfolder):
     """
