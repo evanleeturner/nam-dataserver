@@ -279,7 +279,7 @@ def fetch_lasthtmllink(url,tries=6):
        :rtype: str
     """
     for i in range(tries):
-        logging.info("fetch_lasthtmllink() try #{} starting for \n{url}".format(i,url))
+        logging.info("fetch_lasthtmllink() try #{} starting for \n{}".format(i,url))
         try:
             html = pd.read_html(url)
             break
@@ -293,8 +293,8 @@ def fetch_lasthtmllink(url,tries=6):
         return
 
     else:
-        logging.debug("Our fetched html looks like:\n{}".format(html.head(3)))
         df = html[0]
+        logging.debug("Our fetched html looks like:\n{}".format(df.head(3)))
         df.dropna(how='all', inplace=True)
         last_file = df.iloc[-1,0]
         logging.info("fetch_lasthtmllink() completed successfully with {} .".format(last_file))
