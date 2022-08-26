@@ -216,12 +216,10 @@ def match_grb_file(grb_file,directory,match_list,gps_list,output_folder):
     df = ds.to_dataframe()
     logging.debug("Converted grb2 slice to dataframe...")
     winds = pd.DataFrame()
-    arrays = []
 
-    #need to add testing to make sure gps_list has columns lat,lon, station
+    arrays = []
     for index, row in gps_list.iterrows():
         #logging.debug("searching for... {a}, {b}, {c}".format(a=row['station'],b=row["lat"], c=row['lon']))
-        #print(row["station"], row["lat"], row['lon'])
         df2 = df[df['gridlat_0'] < (row['lat']+.001)]
         df3 = df2[df2['gridlat_0'] > (row['lat'] - .001)]
         df4 = df3[df3['gridlon_0'] < (row['lon'] + .01)]
@@ -229,15 +227,10 @@ def match_grb_file(grb_file,directory,match_list,gps_list,output_folder):
         row_1=df5.iloc[0]
 
         #logging.debug("found {len} matches with row 1 as: {lat} , {lon}".format(len=len(df5),lat=df5['gridlat_0'].iat[0], lon=df5['gridlon_0'].iat[0]))
-        #print ("row two as ",df5['gridlat_0'].iat[1], df5['gridlon_0'].iat[1])
         #supress errors for slice copying here...
         located = df5.iloc[:1]
         located.drop(columns=['gridlon_0', 'gridlat_0'], inplace=True)
         located['station'] = row['station']
-        #located['org_lat'] = row['lat']
-        #located['org_lon'] = row['lon']
-        #located['speed'] = wind_uv_to_spd(located['UGRD_P0_L103_GLC0'].iat[0],located['VGRD_P0_L103_GLC0'].iat[0])
-        #located['dir'] = wind_uv_to_dir(located['UGRD_P0_L103_GLC0'].iat[0],located['VGRD_P0_L103_GLC0'].iat[0])
         arrays.append(located)
 
 
@@ -588,19 +581,34 @@ def Print_Winds_TXBLEND_FMT(bigframe, twdb_wind_list, outputfolder):
     return
 
 def make_tarfile(output_filename, source_dir):
-    """
-    Method is a simple wrapper for tarfile library to create a tar.gz out of an entire directory.
-    """
-    logging.debug("Entering make_tarfile() with output {} and source {}".format(output_filename, source_dir))
-    org_dir = os.getcwd()
+    """Method is a simple wrapper for tarfile library to create a tar.gz
+    out of an entire directory.
 
-    os.chdir(source_dir)
+    To preserve the tarfile path's correctly, the function will change
+    directories to source_dir and then return to the original working directory.
+
+    :param output_filename: file IO PATH
+    :type output_filename: str
+    :param source_dir: file IO PATH
+    :type source_dir: str
+
+
+    """
+    logging.debug("make_tarfile() entering with output {} and source {}".format(output_filename, source_dir))
+
+    org_dir = os.getcwd()  #preserve where we are now
+    os.chdir(source_dir) #move to the source directory
+
 
     with tarfile.open(output_filename, "w:") as tar:
         tar.add(".", arcname=os.path.basename("."))
     logging.info("Wrote tarfile {}".format(output_filename))
 
-    os.chdir(org_dir)
+    with open(output_filename, mode='r:') as f1:
+        print(f1.list())
+
+    os.chdir(org_dir) #return to original directory prior to exit
+
 def read_TWDB_NAM_csv(fn,folder,columns_name, convertUVwinds=True):
     """
     Function reads a single file from disk in TWDB NAM CSV format.
