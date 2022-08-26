@@ -604,7 +604,7 @@ def make_tarfile(output_filename, source_dir):
         tar.add(".", arcname=os.path.basename("."))
     logging.info("Wrote tarfile {}".format(output_filename))
 
-    with open(output_filename, mode='r:') as f1:
+    with tarfile.open(output_filename, mode='r:*') as f1:
         print(f1.list())
 
     os.chdir(org_dir) #return to original directory prior to exit
