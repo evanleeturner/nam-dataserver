@@ -646,10 +646,6 @@ def make_tarfile(output_filename, source_dir):
         tar.add(".", arcname=os.path.basename("."))
     logging.info("Wrote tarfile {}".format(output_filename))
 
-    #do testing on the resulting tarfile...
-    with tarfile.open(output_filename, mode='r:*') as f1:
-        logging.info("Tarfile contains {} elements".format(len(f1.list())))
-
     os.chdir(org_dir) #return to original directory prior to exit
 
 def read_TWDB_NAM_csv(fn,folder,columns_name, convertUVwinds=True):
