@@ -6,6 +6,8 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
+     
+
 project = 'nam-dataserver'
 copyright = '2022, Evan L. Turner'
 author = 'Evan L. Turner'
@@ -14,7 +16,7 @@ release = '1.0'
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
 
-extensions = []
+extensions = ['sphinx.ext.autodoc']
 
 templates_path = ['_templates']
 exclude_patterns = []
@@ -26,8 +28,9 @@ exclude_patterns = []
 
 html_theme = 'alabaster'
 html_static_path = ['_static']
+add_module_names = False
 
 import os
 import sys
-sys.path.insert(0,os.path.abspath('../..'))
+sys.path.insert(0,os.path.abspath('../../src'))
 sys.setrecursionlimit(1500)

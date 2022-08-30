@@ -1,0 +1,560 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+
+    <title>namdataserver package &#8212; nam-dataserver 1.0 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
+    <script src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="namdataserver-package">
+<h1>namdataserver package<a class="headerlink" href="#namdataserver-package" title="Permalink to this heading">¶</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading">¶</a></h2>
+</section>
+<section id="module-namdataserver.namdataserver">
+<span id="namdataserver-module"></span><h2>namdataserver module<a class="headerlink" href="#module-namdataserver.namdataserver" title="Permalink to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="namdataserver.namdataserver.BackFillNAM">
+<span class="sig-name descname"><span class="pre">BackFillNAM</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">starttime</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">endtime</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skiphours</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#namdataserver.namdataserver.BackFillNAM" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function downloads a series of NAM files between two timeperiods, returning
+the most current and accurate forecast for each hour possible.</p>
+<p>The default behavior is to only download 3-hourly data (data every 3 hours)
+which is controlled by the optional kwarg skiphours=3</p>
+<p>Taken from the NAM documentation
+(<a class="reference external" href="https://www.ncei.noaa.gov/products/weather-climate-models/north-american-mesoscale">https://www.ncei.noaa.gov/products/weather-climate-models/north-american-mesoscale</a>)
+the NAM system updates (4/day: 00, 06, 12, 18UTC) with hourly forecasts.
+To retrieve the most accurate past data, this method retrieves the most
+accurate forecast data for the time period in question within the 4/day
+runcycle of the
+model.</p>
+<p>NOTE: All times are considered to be UTC.</p>
+<p>Example:</p>
+<p>BackFillNAM(startdate, enddate) - where startdate = “3/3/2022 8:00”
+and enddate=”3/3/2022” 14:00.</p>
+<p>Method downloads NAM files:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">nam_218_20220303_06_002</span>    <span class="o">-</span>  <span class="mi">3</span><span class="o">/</span><span class="mi">3</span><span class="o">/</span><span class="mi">2022</span> <span class="mi">8</span><span class="p">:</span><span class="mi">00</span>
+<span class="n">nam_218_20220303_06_003</span>    <span class="o">-</span>  <span class="mi">3</span><span class="o">/</span><span class="mi">3</span><span class="o">/</span><span class="mi">2022</span> <span class="mi">9</span><span class="p">:</span><span class="mi">00</span>
+<span class="n">nam_218_20220303_06_004</span>    <span class="o">-</span>  <span class="mi">3</span><span class="o">/</span><span class="mi">3</span><span class="o">/</span><span class="mi">2022</span> <span class="mi">10</span><span class="p">:</span><span class="mi">00</span>
+<span class="n">nam_218_20220303_06_005</span>    <span class="o">-</span>  <span class="mi">3</span><span class="o">/</span><span class="mi">3</span><span class="o">/</span><span class="mi">2022</span> <span class="mi">11</span><span class="p">:</span><span class="mi">00</span>
+<span class="n">nam_218_20220303_12_000</span>    <span class="o">-</span>  <span class="mi">3</span><span class="o">/</span><span class="mi">3</span><span class="o">/</span><span class="mi">2022</span> <span class="mi">12</span><span class="p">:</span><span class="mi">00</span>
+<span class="n">nam_218_20220303_12_001</span>    <span class="o">-</span>  <span class="mi">3</span><span class="o">/</span><span class="mi">3</span><span class="o">/</span><span class="mi">2022</span> <span class="mi">13</span><span class="p">:</span><span class="mi">00</span>
+<span class="n">nam_218_20220303_12_002</span>    <span class="o">-</span>  <span class="mi">3</span><span class="o">/</span><span class="mi">3</span><span class="o">/</span><span class="mi">2022</span> <span class="mi">14</span><span class="p">:</span><span class="mi">00</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>startime</strong> (<em>datetime.datetime</em>) – timeperiod to begin downloading forecast data</p></li>
+<li><p><strong>endtime</strong> (<em>datetime.datetime</em>) – timeperiod to stop downloading forecast data</p></li>
+<li><p><strong>skiphours</strong> (<em>int</em>) – hours to skip, 3 is default</p></li>
+</ul>
+</dd>
+</dl>
+<p><br></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="namdataserver.namdataserver.Convert_TWDB">
+<span class="sig-name descname"><span class="pre">Convert_TWDB</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">import_folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">OUTPUT_folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">TMP_folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">windlist_df</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#namdataserver.namdataserver.Convert_TWDB" title="Permalink to this definition">¶</a></dt>
+<dd><p>Large first-step wrapper function to convert NAM data to TWDB format and
+send output as a tar file for use in TxBLEND model.</p>
+<p>Filename follows the NOAA NAM formatting scheme where the datetime is
+embedded in the filename.
+See the NOAA site:
+<a class="reference external" href="https://www.ncei.noaa.gov/products/weather-climate-models/north-american-mesoscale">https://www.ncei.noaa.gov/products/weather-climate-models/north-american-mesoscale</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>import_folder</strong> (<em>os.PATH</em>) – Location were our processed CSV files are.</p></li>
+<li><p><strong>OUTPUT_folder</strong> (<em>os.PATH</em>) – Location to place our finished tarfile</p></li>
+<li><p><strong>TMP_folder</strong> (<em>os.PATH</em>) – Temp working directory location</p></li>
+<li><p><strong>windlist_df</strong> (<em>Pandas.DataFrame</em>) – list of stations and gps we need data for.</p></li>
+</ul>
+</dd>
+</dl>
+<p><br></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="namdataserver.namdataserver.Locate_Closest_File">
+<span class="sig-name descname"><span class="pre">Locate_Closest_File</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestamp</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#namdataserver.namdataserver.Locate_Closest_File" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method determins the most accurate forecast NAM file for the exact timestamp.</p>
+<p>Eg.  We wish to find the most accurate forecast for 01/08/2022 hour 2.
+The method will return with str <em>nam_218_20220801_0000_001.grb2</em> as this
+is the most accurate forecast model result for the timestamp.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>timestamp</strong> (<em>datetime.datetime</em>) – time in UCT</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>filename in NAM syntax eg nam_218_20220801_0000_000.grb2</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+<p><br></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="namdataserver.namdataserver.Print_Winds_TXBLEND_FMT">
+<span class="sig-name descname"><span class="pre">Print_Winds_TXBLEND_FMT</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bigframe</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">twdb_wind_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputfolder</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#namdataserver.namdataserver.Print_Winds_TXBLEND_FMT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function prints a large combined dataframe of wind data in the TXBLEND
+wndq format file.This format was originally what was delivered to TWDB
+by the TAMU modeling group through a web interface</p>
+<p>The function converts a dataframe that looks like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">station</span>   <span class="n">Datetime</span>        <span class="n">SPD_mph</span> <span class="n">DIR</span>
+<span class="n">twdb000</span>   <span class="mi">2022</span><span class="o">-</span><span class="mi">08</span><span class="o">-</span><span class="mi">14</span> <span class="mi">18</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mi">00</span>     <span class="mf">15.128582</span>       <span class="mf">102.088511</span>
+<span class="n">twdb001</span>   <span class="mi">2022</span><span class="o">-</span><span class="mi">08</span><span class="o">-</span><span class="mi">14</span> <span class="mi">18</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mi">00</span>     <span class="mf">14.335636</span>       <span class="mf">108.621309</span>
+<span class="n">twdb002</span>   <span class="mi">2022</span><span class="o">-</span><span class="mi">08</span><span class="o">-</span><span class="mi">14</span> <span class="mi">18</span><span class="p">:</span><span class="mi">00</span><span class="p">:</span><span class="mi">00</span>     <span class="mf">15.999258</span>       <span class="mf">85.801288</span>
+</pre></div>
+</div>
+<p>To the ending file format with fixed with crazyness like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">*******</span><span class="n">Wind</span> <span class="n">Data</span> <span class="p">(</span><span class="mi">3</span><span class="n">Hourly</span><span class="p">)</span> <span class="n">Time</span> <span class="ow">in</span> <span class="n">GMT</span><span class="o">****</span>
+<span class="o">**</span><span class="mi">3</span><span class="o">-</span><span class="n">hourly</span> <span class="n">winds</span> <span class="kn">from</span> <span class="nn">NAM</span>  <span class="n">model</span> <span class="k">for</span> <span class="n">station</span>  <span class="n">twdb135</span> <span class="mf">28.248</span>   <span class="o">-</span><span class="mf">96.326</span>
+<span class="mi">50</span><span class="p">,</span> <span class="n">number</span> <span class="n">of</span> <span class="n">days</span> <span class="n">of</span> <span class="n">this</span> <span class="n">record</span>
+<span class="mi">2022</span> <span class="mi">03</span> <span class="mi">19</span> <span class="mi">00</span>   <span class="mf">11.0</span>  <span class="mf">354.8</span>
+<span class="mi">2022</span> <span class="mi">03</span> <span class="mi">19</span> <span class="mi">03</span>    <span class="mf">9.4</span>   <span class="mf">12.2</span>
+<span class="mi">2022</span> <span class="mi">03</span> <span class="mi">19</span> <span class="mi">06</span>   <span class="mf">10.5</span>   <span class="mf">31.9</span>
+<span class="mi">2022</span> <span class="mi">03</span> <span class="mi">19</span> <span class="mi">09</span>   <span class="mf">16.5</span>   <span class="mf">48.4</span>
+<span class="mi">2022</span> <span class="mi">03</span> <span class="mi">19</span> <span class="mi">12</span>   <span class="mf">16.4</span>   <span class="mf">49.8</span>
+<span class="mi">2022</span> <span class="mi">03</span> <span class="mi">19</span> <span class="mi">15</span>   <span class="mf">15.8</span>   <span class="mf">60.4</span>
+<span class="mi">2022</span> <span class="mi">03</span> <span class="mi">19</span> <span class="mi">18</span>   <span class="mf">12.0</span>   <span class="mf">70.3</span>
+</pre></div>
+</div>
+<p>To accomplish this, we use a library called tabulate (<a class="reference external" href="https://pypi.org/project/tabulate/">https://pypi.org/project/tabulate/</a>),
+various string formats, and pandas.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bigframe</strong> (<em>Pandas.DataFrame</em>) – large combined dataframe of wind data</p></li>
+<li><p><strong>twdb_wind_list</strong> (<em>Pandas.DataFrame</em>) – lists of stations of interest</p></li>
+<li><p><strong>outputfolder</strong> (<em>os.PATH</em>) – Location data will be deposited</p></li>
+</ul>
+</dd>
+</dl>
+<p><br></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="namdataserver.namdataserver.csv2pandas">
+<span class="sig-name descname"><span class="pre">csv2pandas</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#namdataserver.namdataserver.csv2pandas" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrapper that attempts to do a Pandas.read_csv() and passes all arguments.
+Purpose of wrapper is to give detailed debugging to logging.
+Check <a class="reference external" href="https://pandas.pydata.org/docs/reference/api/pandas.read_csv.html">https://pandas.pydata.org/docs/reference/api/pandas.read_csv.html</a>
+for documentation on options for pd.read_csv()</p>
+<p>V.1.0 Evan L. Turner 08/25/2022</p>
+<p>This function requires packages: pandas, os, logging</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>args</strong> (<em>str</em>) – arguments to pass to pandas</p></li>
+<li><p><strong>kwargs</strong> (<em>str</em>) – keyword arguments to pass to pandas</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>pandas.DataFrame if connection was successful</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>pandas.DataFrame</p>
+</dd>
+</dl>
+<p><br></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="namdataserver.namdataserver.download_latest">
+<span class="sig-name descname"><span class="pre">download_latest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'218'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#namdataserver.namdataserver.download_latest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function is a wrapper to download the most current NAM forecast model
+to disk.  If a forecast is newer than our currently downloaded set the old
+files are removed to save disk space.</p>
+<p>Function calls others to determine the most current forecast, and repeats
+the download calls to fetch all files to disk, depositing in:
+~/nam-dataserver/downloaded_data/latest</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model</strong> – optional string for model</p>
+</dd>
+</dl>
+<p><br></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="namdataserver.namdataserver.fetch_file">
+<span class="sig-name descname"><span class="pre">fetch_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hashfile</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#namdataserver.namdataserver.fetch_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function downloads a file from url given number of tries,
+additionally, function can apply a md5sum to the file given metadata
+from attached hashfile.  File moved to filename on disk.</p>
+<p>Example arguments:</p>
+<p>Given a URL such as:</p>
+<p><a class="reference external" href="https://www.ncei.noaa.gov/data/north-american-mesoscale-model/access">https://www.ncei.noaa.gov/data/north-american-mesoscale-model/access</a>
+/forecast/202208/20220824/nam_218_20220824_0000_000.grb2</p>
+<p>with filename =  “nam_218_20220824_0000_000.grb2”
+with hasfile = pandas.DataFrame</p>
+<p>The system downloads the link to disk using default of tries, applying
+haslib.hash_finder() to the downloaded file and string comparing to the
+provided hashfile.  If file matches the hashfile the function exits 1</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>url</strong> (<em>str</em>) – http url link</p></li>
+<li><p><strong>filename</strong> (<em>str</em>) – file IO PATH</p></li>
+<li><p><strong>hashfile</strong> – http url link</p></li>
+<li><p><strong>tries</strong> (<em>int</em>) – number of times to retry download</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True for success, False for error</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+<p><br></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="namdataserver.namdataserver.fetch_lasthtmllink">
+<span class="sig-name descname"><span class="pre">fetch_lasthtmllink</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">url</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tries</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#namdataserver.namdataserver.fetch_lasthtmllink" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function fetches html from url for number of tries (default 5),
+returning the last html link from the first column.</p>
+<p>This method is used for http NOAA NAM folder access like
+<a class="reference external" href="https://www.ncei.noaa.gov/data/north-american-mesoscale-model/access/forecast/202208/">https://www.ncei.noaa.gov/data/north-american-mesoscale-model/access/forecast/202208/</a></p>
+<p>where the example html looks like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Name</span>      <span class="n">Last</span> <span class="n">modified</span>   <span class="n">Size</span>    <span class="n">Description</span>
+<span class="n">Parent</span> <span class="n">Directory</span>          <span class="o">-</span>
+<span class="mi">20220801</span><span class="o">/</span> <span class="mi">2022</span><span class="o">-</span><span class="mi">08</span><span class="o">-</span><span class="mi">03</span> <span class="mi">09</span><span class="p">:</span><span class="mi">35</span>        <span class="o">-</span>
+<span class="mi">20220802</span><span class="o">/</span> <span class="mi">2022</span><span class="o">-</span><span class="mi">08</span><span class="o">-</span><span class="mi">04</span> <span class="mi">14</span><span class="p">:</span><span class="mi">21</span>        <span class="o">-</span>
+<span class="mi">20220803</span><span class="o">/</span> <span class="mi">2022</span><span class="o">-</span><span class="mi">08</span><span class="o">-</span><span class="mi">05</span> <span class="mi">08</span><span class="p">:</span><span class="mi">35</span>        <span class="o">-</span>
+</pre></div>
+</div>
+<p>And our program needs to know the last link (most current), in the listing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>url</strong> (<em>str</em>) – http url link</p></li>
+<li><p><strong>tries</strong> (<em>int</em>) – number of times to retry download</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>last link in html file eg. 20220803</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+<p><br></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="namdataserver.namdataserver.fetch_latestfile">
+<span class="sig-name descname"><span class="pre">fetch_latestfile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'218'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#namdataserver.namdataserver.fetch_latestfile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function is a wrapper to fetch the most current NAM model run file from
+the forecast website.  Function calls fetch_lasthtmllink() in succession
+to determin the very latest month, day, and file to download.</p>
+<p>Function returns the URL for the last file, the day and month back to the
+caller.</p>
+<p>Eg:</p>
+<p><a class="reference external" href="https://www.ncei.noaa.gov/data/north-american-mesoscale-model/access/forecast">https://www.ncei.noaa.gov/data/north-american-mesoscale-model/access/forecast</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model</strong> – optional string for model</p>
+</dd>
+<dt class="field-even">Return last_file<span class="colon">:</span></dt>
+<dd class="field-even"><p>most current NAM model file</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+<dt class="field-even">Return our_day<span class="colon">:</span></dt>
+<dd class="field-even"><p>most current NAM forecast day</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+<dt class="field-even">Return our_month<span class="colon">:</span></dt>
+<dd class="field-even"><p>most current NAM forecast month</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+<p><br></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="namdataserver.namdataserver.hash_finder">
+<span class="sig-name descname"><span class="pre">hash_finder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directory</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#namdataserver.namdataserver.hash_finder" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="namdataserver.namdataserver.make_tarfile">
+<span class="sig-name descname"><span class="pre">make_tarfile</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">output_filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">source_dir</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#namdataserver.namdataserver.make_tarfile" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method is a simple wrapper for tarfile library to create a tar.gz
+out of an entire directory.</p>
+<p>To preserve the tarfile path’s correctly, the function will change
+directories to source_dir and then return to the original working directory.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>output_filename</strong> (<em>str</em>) – file IO PATH</p></li>
+<li><p><strong>source_dir</strong> (<em>str</em>) – file IO PATH</p></li>
+</ul>
+</dd>
+</dl>
+<p><br></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="namdataserver.namdataserver.match_grb">
+<span class="sig-name descname"><span class="pre">match_grb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">NAM_column_listings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">match_df</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processed_dir</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#namdataserver.namdataserver.match_grb" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="namdataserver.namdataserver.match_grb_file">
+<span class="sig-name descname"><span class="pre">match_grb_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">grb_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">match_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gps_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_folder</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#namdataserver.namdataserver.match_grb_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="namdataserver.namdataserver.read_TWDB_NAM_csv">
+<span class="sig-name descname"><span class="pre">read_TWDB_NAM_csv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">columns_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">convertUVwinds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#namdataserver.namdataserver.read_TWDB_NAM_csv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Function reads a single file from disk in TWDB NAM CSV format.</p>
+<p>An example file <strong>nam_218_20220814_1800_000.csv</strong> would look like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">UGRD_P0_L103_GLC0</span><span class="p">,</span><span class="n">VGRD_P0_L103_GLC0</span><span class="p">,</span><span class="n">station</span>
+<span class="o">-</span><span class="mf">6.6131005</span><span class="p">,</span><span class="mf">1.416339</span><span class="p">,</span><span class="n">twdb000</span>
+<span class="o">-</span><span class="mf">6.0731006</span><span class="p">,</span><span class="mf">2.046339</span><span class="p">,</span><span class="n">twdb001</span>
+<span class="o">-</span><span class="mf">7.1331005</span><span class="p">,</span><span class="o">-</span><span class="mf">0.5236609</span><span class="p">,</span><span class="n">twdb002</span>
+<span class="o">-</span><span class="mf">7.4331</span><span class="p">,</span><span class="mf">1.036339</span><span class="p">,</span><span class="n">twdb003</span>
+<span class="o">-</span><span class="mf">6.7131004</span><span class="p">,</span><span class="mf">1.936339</span><span class="p">,</span><span class="n">twdb004</span>
+<span class="o">-</span><span class="mf">5.8631005</span><span class="p">,</span><span class="mf">2.2063391</span><span class="p">,</span><span class="n">twdb005</span>
+<span class="o">-</span><span class="mf">5.3731003</span><span class="p">,</span><span class="mf">2.376339</span><span class="p">,</span><span class="n">twdb006</span>
+<span class="o">-</span><span class="mf">5.8531003</span><span class="p">,</span><span class="o">-</span><span class="mf">1.2136608</span><span class="p">,</span><span class="n">twdb007</span>
+<span class="o">-</span><span class="mf">7.8431005</span><span class="p">,</span><span class="mf">0.2863391</span><span class="p">,</span><span class="n">twdb008</span>
+<span class="o">-</span><span class="mf">8.1331005</span><span class="p">,</span><span class="mf">1.8463391</span><span class="p">,</span><span class="n">twdb009</span>
+<span class="o">-</span><span class="mf">7.1031003</span><span class="p">,</span><span class="mf">2.616339</span><span class="p">,</span><span class="n">twdb010</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fn</strong> (<em>os.PATH</em>) – filename pointing to a single NAM csv on disk.</p></li>
+<li><p><strong>folder</strong> (<em>os.PATH</em>) – folder path</p></li>
+<li><p><strong>columns_name</strong> (<em>list</em>) – list of columns for data processing</p></li>
+<li><p><strong>convertUVwinds</strong> (<em>bool</em>) – optional flag to convert UV to mph and bearing</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return tmp<span class="colon">:</span></dt>
+<dd class="field-even"><p>Ingested csv file as Pandas.DataFrame</p>
+</dd>
+<dt class="field-odd">Rtype tmp<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Pandas.DataFrame</p>
+</dd>
+</dl>
+<p><br></p>
+</dd></dl>
+
+</section>
+<section id="module-namdataserver.wind_calcs">
+<span id="namdataserver-wind-calcs-module"></span><h2>namdataserver.wind_calcs module<a class="headerlink" href="#module-namdataserver.wind_calcs" title="Permalink to this heading">¶</a></h2>
+<dl class="py function">
+<dt class="sig sig-object py" id="namdataserver.wind_calcs.angle_between">
+<span class="sig-name descname"><span class="pre">angle_between</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v2</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#namdataserver.wind_calcs.angle_between" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Calcualates the angle between two wind vecotrs. Utilizes the cos equation:</dt><dd><p>cos(theta) = (u dot v)/(magnitude(u) dot magnitude(v))</p>
+</dd>
+</dl>
+<p>Input:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">v1</span> <span class="o">=</span> <span class="n">vector</span> <span class="mf">1.</span> <span class="n">A</span> <span class="n">numpy</span> <span class="n">array</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="ow">or</span> <span class="nb">tuple</span> <span class="k">with</span>
+      <span class="n">u</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">first</span> <span class="n">index</span> <span class="ow">and</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">second</span> <span class="o">--&gt;</span> <span class="n">vector1</span> <span class="o">=</span> <span class="p">[</span><span class="n">u1</span><span class="p">,</span><span class="n">v1</span><span class="p">]</span>
+<span class="n">v2</span> <span class="o">=</span> <span class="n">vector</span> <span class="mf">2.</span> <span class="n">A</span> <span class="n">numpy</span> <span class="n">array</span><span class="p">,</span> <span class="nb">list</span><span class="p">,</span> <span class="ow">or</span> <span class="nb">tuple</span> <span class="k">with</span>
+       <span class="n">u</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">first</span> <span class="n">index</span> <span class="ow">and</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">second</span> <span class="o">--&gt;</span> <span class="n">vector2</span> <span class="o">=</span> <span class="p">[</span><span class="n">u2</span><span class="p">,</span><span class="n">v2</span><span class="p">]</span>
+</pre></div>
+</div>
+<p>Output:
+Returns the angle in radians between vectors ‘v1’ and ‘v2’</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">angle_between</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+<span class="go">    1.5707963267948966</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">angle_between</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+<span class="go">    0.0</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">angle_between</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+<span class="go">    3.141592653589793</span>
+</pre></div>
+</div>
+<p><br></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="namdataserver.wind_calcs.unit_vector">
+<span class="sig-name descname"><span class="pre">unit_vector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vector</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#namdataserver.wind_calcs.unit_vector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the unit vector of the vector.</p>
+<p><br></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="namdataserver.wind_calcs.wind_spddir_to_uv">
+<span class="sig-name descname"><span class="pre">wind_spddir_to_uv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">wspd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wdir</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#namdataserver.wind_calcs.wind_spddir_to_uv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the u and v wind components from wind speed and direction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>wspd</strong> (<em>float</em>) – wind speed</p></li>
+<li><p><strong>wdir</strong> (<em>float</em>) – wind direction</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return u<span class="colon">:</span></dt>
+<dd class="field-even"><p>west/east direction (wind from the west is positive, from the east is negative</p>
+</dd>
+<dt class="field-odd">Rtype u<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+<dt class="field-even">Return v<span class="colon">:</span></dt>
+<dd class="field-even"><p>south/noth direction (wind from the south is positive, from the north is negative</p>
+</dd>
+<dt class="field-odd">Rtype v<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+<p><br></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="namdataserver.wind_calcs.wind_uv_to_dir">
+<span class="sig-name descname"><span class="pre">wind_uv_to_dir</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">U</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">V</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#namdataserver.wind_calcs.wind_uv_to_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the wind direction from the u and v component of wind.
+Takes into account the wind direction coordinates is different than the
+trig unit circle coordinate. If the wind directin is 360 then returns zero
+(by %360)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> (<em>float</em>) – west/east direction (wind from the west is positive, from the east is negative</p></li>
+<li><p><strong>v</strong> (<em>float</em>) – south/noth direction (wind from the south is positive, from the north is negative</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return WDIR<span class="colon">:</span></dt>
+<dd class="field-even"><p>Direction of Wind</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+<p><br></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="namdataserver.wind_calcs.wind_uv_to_spd">
+<span class="sig-name descname"><span class="pre">wind_uv_to_spd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">U</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">V</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#namdataserver.wind_calcs.wind_uv_to_spd" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the wind speed from the u and v wind components</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>u</strong> (<em>float</em>) – west/east direction (wind from the west is positive, from the east is negative</p></li>
+<li><p><strong>v</strong> (<em>float</em>) – south/noth direction (wind from the south is positive, from the north is negative</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return WSPD<span class="colon">:</span></dt>
+<dd class="field-even"><p>Wind Speed</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+<p><br></p>
+</dd></dl>
+
+</section>
+<section id="module-namdataserver">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-namdataserver" title="Permalink to this heading">¶</a></h2>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">nam-dataserver</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Evan L. Turner.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 5.1.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/namdataserver.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

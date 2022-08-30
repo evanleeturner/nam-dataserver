@@ -25,7 +25,7 @@ logging.basicConfig(format='%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:
 
 
 def csv2pandas(*args, **kwargs):
-    """Wrapper that attempts to do a pandas read_csv() and passes all arguments.
+    """Wrapper that attempts to do a Pandas.read_csv() and passes all arguments.
     Purpose of wrapper is to give detailed debugging to logging.
     Check https://pandas.pydata.org/docs/reference/api/pandas.read_csv.html
     for documentation on options for pd.read_csv()
@@ -34,12 +34,14 @@ def csv2pandas(*args, **kwargs):
 
     This function requires packages: pandas, os, logging
 
-        :param args: arguments to pass to pandas
-        :type args: str
-        :param timestamp: keyword arguments to pass to pandas
-        :type timestamp: str
-        :return: pandas.DataFrame if connection was successful
-        :rtype: pandas.DataFrame
+    :param args: arguments to pass to pandas
+    :type args: str
+    :param kwargs: keyword arguments to pass to pandas
+    :type kwargs: str
+    :return: pandas.DataFrame if connection was successful
+    :rtype: pandas.DataFrame
+
+    |br|
     """
 
     if kwargs:
@@ -69,10 +71,17 @@ def csv2pandas(*args, **kwargs):
 def Locate_Closest_File(timestamp):
     """Method determins the most accurate forecast NAM file for the exact timestamp.
 
-        :param timestamp: time in UCT
-        :type timestamp: datetime.datetime
-        :return: filename in NAM syntax eg nam_218_20220801_0000_000.grb2
-        :rtype: str
+    Eg.  We wish to find the most accurate forecast for 01/08/2022 hour 2.
+    The method will return with str *nam_218_20220801_0000_001.grb2* as this
+    is the most accurate forecast model result for the timestamp.
+
+
+    :param timestamp: time in UCT
+    :type timestamp: datetime.datetime
+    :return: filename in NAM syntax eg nam_218_20220801_0000_000.grb2
+    :rtype: str
+
+    |br|
     """
     file_prefix = "nam_218_"
 
@@ -102,9 +111,12 @@ def Locate_Closest_File(timestamp):
     return first_file
 
 
-def BackFillNAM(starttime, endtime):
-    """Function downloads a series of NAM files between two timeperiods, or from
-    the most current model back n hours.
+def BackFillNAM(starttime, endtime,skiphours=3):
+    """Function downloads a series of NAM files between two timeperiods, returning
+    the most current and accurate forecast for each hour possible.
+
+    The default behavior is to only download 3-hourly data (data every 3 hours)
+    which is controlled by the optional kwarg skiphours=3
 
     Taken from the NAM documentation
     (https://www.ncei.noaa.gov/products/weather-climate-models/north-american-mesoscale)
@@ -123,13 +135,24 @@ def BackFillNAM(starttime, endtime):
 
     Method downloads NAM files:
 
-    nam_218_20220303_06_002    -  3/3/2022 8:00
-    nam_218_20220303_06_003    -  3/3/2022 9:00
-    nam_218_20220303_06_004    -  3/3/2022 10:00
-    nam_218_20220303_06_005    -  3/3/2022 11:00
-    nam_218_20220303_12_000    -  3/3/2022 12:00
-    nam_218_20220303_12_001    -  3/3/2022 13:00
-    nam_218_20220303_12_002    -  3/3/2022 14:00
+    ::
+
+      nam_218_20220303_06_002    -  3/3/2022 8:00
+      nam_218_20220303_06_003    -  3/3/2022 9:00
+      nam_218_20220303_06_004    -  3/3/2022 10:00
+      nam_218_20220303_06_005    -  3/3/2022 11:00
+      nam_218_20220303_12_000    -  3/3/2022 12:00
+      nam_218_20220303_12_001    -  3/3/2022 13:00
+      nam_218_20220303_12_002    -  3/3/2022 14:00
+
+    :param startime: timeperiod to begin downloading forecast data
+    :type startime: datetime.datetime
+    :param endtime: timeperiod to stop downloading forecast data
+    :type endtime: datetime.datetime
+    :param skiphours: hours to skip, 3 is default
+    :type skiphours: int
+
+    |br|
     """
 
     file_prefix = 'NAM_218_'
@@ -248,28 +271,33 @@ def match_grb_file(grb_file,directory,match_list,gps_list,output_folder):
 
 def fetch_lasthtmllink(url,tries=6):
     """Function fetches html from url for number of tries (default 5),
-       returning the last html link from the first column.
+    returning the last html link from the first column.
 
-       This method is used for http NOAA NAM folder access like:
-       https://www.ncei.noaa.gov/data/north-american-mesoscale-model/access/forecast/202208/
+    This method is used for http NOAA NAM folder access like
+    https://www.ncei.noaa.gov/data/north-american-mesoscale-model/access/forecast/202208/
 
-       where the example html looks like:
+    where the example html looks like:
+
+    ::
+
+      Name	Last modified	Size	Description
+      Parent Directory	 	-
+      20220801/	2022-08-03 09:35	-
+      20220802/	2022-08-04 14:21	-
+      20220803/	2022-08-05 08:35	-
+
+    And our program needs to know the last link (most current), in the listing.
 
 
-       Name	Last modified	Size	Description
-       Parent Directory	 	-
-       20220801/	2022-08-03 09:35	-
-       20220802/	2022-08-04 14:21	-
-       20220803/	2022-08-05 08:35	-
+    :param url: http url link
+    :type url: str
+    :param tries: number of times to retry download
+    :type tries: int
+    :return: last link in html file eg. 20220803
+    :rtype: str
 
-       And our program needs to know the last link (most current), in the listing.
+    |br|
 
-       :param url: http url link
-       :type url: str
-       :param tries: number of times to retry download
-       :type tries: int
-       :return: last link in html file eg. 20220803
-       :rtype: str
     """
     for i in range(tries):
         logging.info("fetch_lasthtmllink() try #{} starting for \n{}".format(i,url))
@@ -323,6 +351,8 @@ def fetch_file(url, filename, hashfile=None, tries=5):
     :type tries: int
     :return: True for success, False for error
     :rtype: bool
+
+    |br|
 
     """
     pwd = os.getcwd()  #locate our working directory
@@ -398,6 +428,9 @@ def fetch_latestfile(model='218'):
     :rtype: str
     :return our_month: most current NAM forecast month
     :rtype: str
+
+    |br|
+
     """
     logging.debug("Entering function fetch_latestfile()")
 
@@ -436,6 +469,9 @@ def download_latest(model='218'):
 
     :param model: optional string for model
     :type url: str
+
+    |br|
+
     """
     logging.debug("Entering function download_latest()")
     home = str(Path.home())  #logic to find our home directory for cronscripts...
@@ -510,30 +546,34 @@ def download_latest(model='218'):
         logging.debug("download_latest() completed successfully.")
 
 def Print_Winds_TXBLEND_FMT(bigframe, twdb_wind_list, outputfolder):
-    """
-    Function prints a large combined dataframe of wind data in the TXBLEND wndq format file.
-    This format was originally what was delivered to TWDB by the TAMU modeling group through a web interface
+    """Function prints a large combined dataframe of wind data in the TXBLEND
+    wndq format file.This format was originally what was delivered to TWDB
+    by the TAMU modeling group through a web interface
 
     The function converts a dataframe that looks like this:
 
-    	station	Datetime	SPD_mph	DIR
-    0	twdb000	2022-08-14 18:00:00	15.128582	102.088511
-    1	twdb001	2022-08-14 18:00:00	14.335636	108.621309
-    2	twdb002	2022-08-14 18:00:00	15.999258	85.801288
+    ::
+
+      station	Datetime	SPD_mph	DIR
+      twdb000	2022-08-14 18:00:00	15.128582	102.088511
+      twdb001	2022-08-14 18:00:00	14.335636	108.621309
+      twdb002	2022-08-14 18:00:00	15.999258	85.801288
 
 
-    Tp the ending file format with fixed with crazyness like this:
+    To the ending file format with fixed with crazyness like this:
 
-    :*******Wind Data (3Hourly) Time in GMT****
-    **3-hourly winds from NAM  model for station  twdb135 28.248   -96.326
-     50, number of days of this record
-    2022 03 19 00   11.0  354.8
-    2022 03 19 03    9.4   12.2
-    2022 03 19 06   10.5   31.9
-    2022 03 19 09   16.5   48.4
-    2022 03 19 12   16.4   49.8
-    2022 03 19 15   15.8   60.4
-    2022 03 19 18   12.0   70.3
+    ::
+
+      *******Wind Data (3Hourly) Time in GMT****
+      **3-hourly winds from NAM  model for station  twdb135 28.248   -96.326
+      50, number of days of this record
+      2022 03 19 00   11.0  354.8
+      2022 03 19 03    9.4   12.2
+      2022 03 19 06   10.5   31.9
+      2022 03 19 09   16.5   48.4
+      2022 03 19 12   16.4   49.8
+      2022 03 19 15   15.8   60.4
+      2022 03 19 18   12.0   70.3
 
     To accomplish this, we use a library called tabulate (https://pypi.org/project/tabulate/),
     various string formats, and pandas.
@@ -544,6 +584,8 @@ def Print_Winds_TXBLEND_FMT(bigframe, twdb_wind_list, outputfolder):
     :type twdb_wind_list: Pandas.DataFrame
     :param outputfolder: Location data will be deposited
     :type outputfolder: os.PATH
+
+    |br|
 
     """
     logging.debug("Entering Print_Winds_TXBLEND_FMT() with bigframe of len {}, {}, {}"
@@ -634,6 +676,7 @@ def make_tarfile(output_filename, source_dir):
     :param source_dir: file IO PATH
     :type source_dir: str
 
+    |br|
 
     """
     logging.debug("make_tarfile() entering with output {} and source {}".format(output_filename, source_dir))
@@ -652,20 +695,22 @@ def read_TWDB_NAM_csv(fn,folder,columns_name, convertUVwinds=True):
     """
     Function reads a single file from disk in TWDB NAM CSV format.
 
-    An example file "nam_218_20220814_1800_000.csv" would look like:
+    An example file **nam_218_20220814_1800_000.csv** would look like:
 
-    UGRD_P0_L103_GLC0,VGRD_P0_L103_GLC0,station
-    -6.6131005,1.416339,twdb000
-    -6.0731006,2.046339,twdb001
-    -7.1331005,-0.5236609,twdb002
-    -7.4331,1.036339,twdb003
-    -6.7131004,1.936339,twdb004
-    -5.8631005,2.2063391,twdb005
-    -5.3731003,2.376339,twdb006
-    -5.8531003,-1.2136608,twdb007
-    -7.8431005,0.2863391,twdb008
-    -8.1331005,1.8463391,twdb009
-    -7.1031003,2.616339,twdb010
+    ::
+
+     UGRD_P0_L103_GLC0,VGRD_P0_L103_GLC0,station
+     -6.6131005,1.416339,twdb000
+     -6.0731006,2.046339,twdb001
+     -7.1331005,-0.5236609,twdb002
+     -7.4331,1.036339,twdb003
+     -6.7131004,1.936339,twdb004
+     -5.8631005,2.2063391,twdb005
+     -5.3731003,2.376339,twdb006
+     -5.8531003,-1.2136608,twdb007
+     -7.8431005,0.2863391,twdb008
+     -8.1331005,1.8463391,twdb009
+     -7.1031003,2.616339,twdb010
 
     :param fn: filename pointing to a single NAM csv on disk.
     :type fn: os.PATH
@@ -677,6 +722,9 @@ def read_TWDB_NAM_csv(fn,folder,columns_name, convertUVwinds=True):
     :type convertUVwinds: bool
     :return tmp: Ingested csv file as Pandas.DataFrame
     :rtype tmp: Pandas.DataFrame
+
+    |br|
+
     """
 
     tmp = csv2pandas(os.path.join (folder, fn))
@@ -716,6 +764,8 @@ def Convert_TWDB(import_folder,OUTPUT_folder,TMP_folder,windlist_df):
     :type TMP_folder: os.PATH
     :param windlist_df: list of stations and gps we need data for.
     :type windlist_df: Pandas.DataFrame
+
+    |br|
 
     """
      #our U and V constants we are expecting from the files
