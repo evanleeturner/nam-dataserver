@@ -377,6 +377,28 @@ def fetch_file(url, filename, hashfile=None, tries=5):
         return False
 
 def fetch_latestfile(model='218'):
+    """Function is a wrapper to fetch the most current NAM model run file from
+    the forecast website.  Function calls fetch_lasthtmllink() in succession
+    to determin the very latest month, day, and file to download.
+
+    Function returns the URL for the last file, the day and month back to the
+    caller.
+
+
+    Eg:
+
+    https://www.ncei.noaa.gov/data/north-american-mesoscale-model/access/forecast
+
+
+    :param model: optional string for model
+    :type url: str
+    :return last_file: most current NAM model file
+    :rtype: str
+    :return our_day: most current NAM forecast day
+    :rtype: str
+    :return our_month: most current NAM forecast month
+    :rtype: str
+    """
     logging.debug("Entering function fetch_latestfile()")
 
     home = str(Path.home())  #logic to find our home directory for cronscripts...
@@ -404,6 +426,17 @@ def fetch_latestfile(model='218'):
     return last_file, our_day, our_month
 
 def download_latest(model='218'):
+    """Function is a wrapper to download the most current NAM forecast model
+    to disk.  If a forecast is newer than our currently downloaded set the old
+    files are removed to save disk space.
+
+    Function calls others to determine the most current forecast, and repeats
+    the download calls to fetch all files to disk, depositing in:
+    ~/nam-dataserver/downloaded_data/latest
+
+    :param model: optional string for model
+    :type url: str
+    """
     logging.debug("Entering function download_latest()")
     home = str(Path.home())  #logic to find our home directory for cronscripts...
 
@@ -452,7 +485,7 @@ def download_latest(model='218'):
     #download all of the grib files... this could take a while
     index = 0
     has_error = False
-    for i in range(53):
+    for i in range(53):  #53 total files in model 218
         st2 = time.time()  #our program start time...
         our_file=str(url_base+our_month+our_day+file_prefix+'_'+str(index).zfill(3)+file_post)
         local_name=str(file_prefix+'_'+str(index).zfill(3)+file_post)
@@ -460,6 +493,8 @@ def download_latest(model='218'):
 
         if success == False:
             has_error = True
+        #logic to skip file indexes...
+        #because the forcasts for 218 stop going per hour after hour 36
         if index < 36:
             index+=1
         else:
@@ -502,6 +537,13 @@ def Print_Winds_TXBLEND_FMT(bigframe, twdb_wind_list, outputfolder):
 
     To accomplish this, we use a library called tabulate (https://pypi.org/project/tabulate/),
     various string formats, and pandas.
+
+    :param bigframe: large combined dataframe of wind data
+    :type bigframe: Pandas.DataFrame
+    :param twdb_wind_list: lists of stations of interest
+    :type twdb_wind_list: Pandas.DataFrame
+    :param outputfolder: Location data will be deposited
+    :type outputfolder: os.PATH
 
     """
     logging.debug("Entering Print_Winds_TXBLEND_FMT() with bigframe of len {}, {}, {}"
@@ -604,8 +646,9 @@ def make_tarfile(output_filename, source_dir):
         tar.add(".", arcname=os.path.basename("."))
     logging.info("Wrote tarfile {}".format(output_filename))
 
+    #do testing on the resulting tarfile...
     with tarfile.open(output_filename, mode='r:*') as f1:
-        print(f1.list())
+        logging.info("Tarfile contains {} elements".format(len(f1.list())))
 
     os.chdir(org_dir) #return to original directory prior to exit
 
@@ -627,6 +670,17 @@ def read_TWDB_NAM_csv(fn,folder,columns_name, convertUVwinds=True):
     -7.8431005,0.2863391,twdb008
     -8.1331005,1.8463391,twdb009
     -7.1031003,2.616339,twdb010
+
+    :param fn: filename pointing to a single NAM csv on disk.
+    :type fn: os.PATH
+    :param folder: folder path
+    :type folder: os.PATH
+    :param columns_name: list of columns for data processing
+    :type columns_name: list
+    :param convertUVwinds: optional flag to convert UV to mph and bearing
+    :type convertUVwinds: bool
+    :return tmp: Ingested csv file as Pandas.DataFrame
+    :rtype tmp: Pandas.DataFrame
     """
 
     tmp = csv2pandas(os.path.join (folder, fn))
@@ -650,9 +704,23 @@ def read_TWDB_NAM_csv(fn,folder,columns_name, convertUVwinds=True):
 
 def Convert_TWDB(import_folder,OUTPUT_folder,TMP_folder,windlist_df):
     """
-    Function imports Wind data in csv format, using the filename to create a datetime index.
-    Filename follows the NOAA NAM formatting scheme where the datetime is embedded in the filename.
-    See the NOAA site: https://www.ncei.noaa.gov/products/weather-climate-models/north-american-mesoscale
+    Large first-step wrapper function to convert NAM data to TWDB format and
+    send output as a tar file for use in TxBLEND model.
+
+    Filename follows the NOAA NAM formatting scheme where the datetime is
+    embedded in the filename.
+    See the NOAA site:
+    https://www.ncei.noaa.gov/products/weather-climate-models/north-american-mesoscale
+
+    :param import_folder: Location were our processed CSV files are.
+    :type import_folder: os.PATH
+    :param OUTPUT_folder: Location to place our finished tarfile
+    :type OUTPUT_folder: os.PATH
+    :param TMP_folder: Temp working directory location
+    :type TMP_folder: os.PATH
+    :param windlist_df: list of stations and gps we need data for.
+    :type windlist_df: Pandas.DataFrame
+
     """
      #our U and V constants we are expecting from the files
     U = 'UGRD_P0_L103_GLC0'
@@ -689,3 +757,4 @@ def Convert_TWDB(import_folder,OUTPUT_folder,TMP_folder,windlist_df):
 
     outputfile = os.path.join(OUTPUT_folder,"twdbq.tar")
     make_tarfile(outputfile, TMP_folder)
+    return
