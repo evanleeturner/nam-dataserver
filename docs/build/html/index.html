@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Welcome to nam-dataserver’s documentation! &#8212; nam-dataserver 1.0 documentation</title>
+    <title>nam-dataserver &#8212; nam-dataserver 1.0 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css" />
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
@@ -32,9 +32,104 @@
 
           <div class="body" role="main">
             
-  <section id="welcome-to-nam-dataserver-s-documentation">
-<h1>Welcome to nam-dataserver’s documentation!<a class="headerlink" href="#welcome-to-nam-dataserver-s-documentation" title="Permalink to this heading">¶</a></h1>
+  <section id="nam-dataserver">
+<h1>nam-dataserver<a class="headerlink" href="#nam-dataserver" title="Permalink to this heading">¶</a></h1>
 <div class="toctree-wrapper compound">
+</div>
+<p>This is the Texas Water Development Board (TWDB) running example for nam-dataserver.
+The TWDB runs a legacy hydrodynamic model, TxBLEND for their oil response
+program (<a class="reference external" href="https://www.twdb.texas.gov/surfacewater/bays/oil_spill/index.asp">https://www.twdb.texas.gov/surfacewater/bays/oil_spill/index.asp</a>).  this
+model requires wind data forecasts at specific grid points within the model.
+<br>
+<br>
+This listing of model grid points, the resulting NAM column names, and folder
+preferences are fed into the nam-dataserver functions to download, collate, and
+prepare input for the TxBLEND model code.
+<br>
+<br>
+This script is run daily using a cronscript.  NOTE that cronscripts require hard
+paths (eg. paths that must start from the root directory ‘/’).  The script also
+runs with the working directory as the user who calls it.  Therefore, we need to
+pay close attention to paths within nam-dataserver and set a hard path to the
+home of the running user (here the example runs in my home directory).
+<br>
+<br>
+For running on a fresh computer for the first time, it is required to backfill
+NAM download data using the function BackFillNAM.  TxBLEND requires 50 days
+of wind data in 3-hourly format to start a single model run.</p>
+<p>An example code snippet would be:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">starttime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2022</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">endtime</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2022</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">25</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+<span class="n">BackFillNAM</span><span class="p">(</span><span class="n">starttime</span><span class="p">,</span><span class="n">endtime</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="installation">
+<h1>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">¶</a></h1>
+<p>1.  Find the most current anaconda release on <a class="reference external" href="https://www.anaconda.com/products/distribution">https://www.anaconda.com/products/distribution</a> .  Use curl in your
+terminal to download the file and install.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>curl -O https://repo.anaconda.com/archive/Anaconda3-2022.05-Linux-x86_64.sh
+bash Anaconda3-2022.05-Linux-x86_64.sh
+</pre></div>
+</div>
+<ol class="arabic simple" start="2">
+<li><p>Then, install the following necessary packages.</p></li>
+</ol>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda create --name pynio_env --channel conda-forge pynio
+</pre></div>
+</div>
+<p>Restart your terminal, activate the pynio environment to install the next packages…</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda activate pynio
+conda install -c anaconda xarray
+conda install -c anaconda pandas
+pip3 install lxml
+pip3 install tabulate
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You can use <strong>conda config –set auto_activate_base false</strong> to not activate anaconda when you start a fresh terminal every login.</p>
+</div>
+<p>3. <strong>SPECIFIC TO TWDB TxBLEND WIND DOWNLOADS</strong> In order for the system to maintain a current download of the NAM forcast you will need to install the program in the crontab.
+Add this line to activate your conda environment in the crontab and to download the latest wind files:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="nv">SHELL</span><span class="o">=</span>/bin/bash
+<span class="nb">source</span> /home/eturner/anaconda3/bin/activate pynio_env<span class="p">;</span> python3 /home/eturner/nam-dataserver/examples/twdb/twdb-txblend-winds.py
+</pre></div>
+</div>
+</section>
+<section id="twdb-run-example">
+<h1>TWDB Run Example<a class="headerlink" href="#twdb-run-example" title="Permalink to this heading">¶</a></h1>
+<p>The TWDB running example program lives in ~/examples/twdb/twdb-txblend-winds and should be called through a
+cronscript.  The program is:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/home/eturner/anaconda3/envs/pyn_env/bin/python3</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">namdataserver</span> <span class="kn">import</span> <span class="n">download_latest</span><span class="p">,</span> <span class="n">BackFillNAM</span><span class="p">,</span><span class="n">csv2pandas</span>
+<span class="kn">from</span> <span class="nn">namdataserver</span> <span class="kn">import</span> <span class="n">match_grb</span><span class="p">,</span> <span class="n">make_tarfile</span><span class="p">,</span> <span class="n">read_TWDB_NAM_csv</span><span class="p">,</span> <span class="n">Convert_TWDB</span><span class="p">,</span><span class="n">Print_Winds_TXBLEND_FMT</span>
+
+<span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Stating main TWDB NAM download script&quot;</span><span class="p">)</span>
+<span class="n">home</span> <span class="o">=</span> <span class="s2">&quot;/home/eturner&quot;</span>    <span class="c1">#must set this to the correct path!</span>
+<span class="n">root_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">home</span><span class="p">,</span><span class="s2">&quot;nam-dataserver&quot;</span><span class="p">)</span>
+<span class="n">latest_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root_dir</span><span class="p">,</span><span class="s2">&quot;downloaded_data&quot;</span> <span class="p">,</span><span class="s2">&quot;latest&quot;</span><span class="p">)</span>
+<span class="n">processed_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root_dir</span><span class="p">,</span><span class="s2">&quot;downloaded_data&quot;</span><span class="p">,</span> <span class="s2">&quot;twdb&quot;</span><span class="p">)</span>
+<span class="n">NAM_column_listings</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;UGRD_P0_L103_GLC0&quot;</span><span class="p">,</span><span class="s2">&quot;VGRD_P0_L103_GLC0&quot;</span><span class="p">]</span>
+<span class="n">output_dir</span> <span class="o">=</span> <span class="s2">&quot;/var/www/html/bays_estuaries/NAM-WINDS/&quot;</span>
+<span class="n">TWDB_Dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root_dir</span><span class="p">,</span><span class="s2">&quot;examples&quot;</span><span class="p">,</span> <span class="s2">&quot;twdb&quot;</span><span class="p">)</span>
+
+<span class="c1">#download latest NAM files</span>
+<span class="n">download_latest</span><span class="p">()</span>
+
+<span class="c1">#open the TWDB station listing and create a pandas dataframe</span>
+<span class="n">twdb_stations</span> <span class="o">=</span> <span class="n">csv2pandas</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">TWDB_Dir</span> <span class="p">,</span><span class="s2">&quot;NAMwinds.latlist.csv&quot;</span><span class="p">))</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Read twdb station file with head </span><span class="se">\n</span><span class="s2"> </span><span class="si">{twdb_stations}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">twdb_stations</span><span class="o">=</span><span class="n">twdb_stations</span><span class="p">))</span>
+
+<span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Begin stripping needed data from NAM files using match_grb().&quot;</span><span class="p">)</span>
+<span class="n">match_grb</span><span class="p">(</span><span class="n">latest_dir</span><span class="p">,</span><span class="n">NAM_column_listings</span><span class="p">,</span><span class="n">twdb_stations</span><span class="p">,</span><span class="n">processed_dir</span><span class="p">)</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Converting stripped NAM values from csv to fixed width format.&quot;</span><span class="p">)</span>
+<span class="n">Convert_TWDB</span><span class="p">(</span><span class="n">processed_dir</span><span class="p">,</span><span class="n">output_dir</span><span class="p">,</span><span class="n">root_dir</span><span class="o">+</span><span class="s2">&quot;tmp_working&quot;</span><span class="p">,</span><span class="n">twdb_stations</span><span class="p">)</span>
+<span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Completed TWDB nam-dataserver script&quot;</span><span class="p">)</span>
+</pre></div>
 </div>
 </section>
 <section id="indices-and-tables">

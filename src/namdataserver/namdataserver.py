@@ -34,6 +34,13 @@ def csv2pandas(*args, **kwargs):
 
     This function requires packages: pandas, os, logging
 
+    Running this fuction will produce logging output like:
+
+    ::
+
+      2022-08-31:10:32:48,301 DEBUG    [namdataserver.py:48] Open_Pandas_CSV(): Attempting to open filename downloaded_data/latest/md5sum.20220827 with arguments {'header': None}
+      2022-08-31:10:32:48,308 DEBUG    [namdataserver.py:61] Openned downloaded_data/latest/md5sum.20220827 for reading with 424 entries
+
     :param args: arguments to pass to pandas
     :type args: str
     :param kwargs: keyword arguments to pass to pandas
@@ -199,17 +206,51 @@ def BackFillNAM(starttime, endtime,skiphours=3):
     return
 
 def hash_finder(filename,directory):
+    """Function is a simple wrapper to **hashlib.md5()** to calculate
+    a hashfile from given file.
+
+    An example logging output looks like:
+
+    ::
+    
+     2022-08-31:10:33:18,926 DEBUG    [namdataserver.py:203] Performing hash operation on /home/eturner/nam-dataserver/downloaded_data/latest/nam_218_20220827_1800_002.grb2
+     2022-08-31:10:33:18,926 DEBUG    [namdataserver.py:208] Hash was determined to be 1f0b6056ffdf73678b38ac416bdf1bde
+
+    :param filename: filename
+    :type filename: str
+    :param directory: file IO PATH
+    :type directory: os.PATH
+    :return: md5 hash
+    :rtype: str
+
+    |br|  
+    """
+
+
+
+
     file = os.path.join(directory, filename)
-    logging.debug("Performing hash operation on {file}".format(file=file))
+    logging.info("Performing hash operation on {file}".format(file=file))
     md5_hash = hashlib.md5()
     with open(file,"rb") as f:
         # Read and update hash in chunks of 4K
         for byte_block in iter(lambda: f.read(4096),b""):
             md5_hash.update(byte_block)
 
-    return (md5_hash.hexdigest())
+    our_hash = md5_hash.hexdigest()
+
+    if our_hash is not None:
+        logging.debug("Hash was determined to be {}".format(our_hash))
+        return our_hash
+    else:
+        logging.error("Hash operation failed for file {}".format(file))
 
 def match_grb(folder,NAM_column_listings,match_df,processed_dir):
+    """Wrapper function for **match_grb_file** to search directory structure 
+    **folder** to run **match_grb_file** for each file in the directory.
+
+    |br|
+    """
     for filename in os.listdir(folder):
         f = os.path.join(folder, filename)
         # checking if it is a file
@@ -219,6 +260,22 @@ def match_grb(folder,NAM_column_listings,match_df,processed_dir):
             match_grb_file(filename,folder,NAM_column_listings,match_df,processed_dir)
 
 def match_grb_file(grb_file,directory,match_list,gps_list,output_folder):
+    """Function writes to disk matching text values for columns in *match_list* from referenced
+    NAM grb2 file.
+
+    :param grb_file: The NAM file in grb2 raw format
+    :type grb_file: .grb2
+    :param directory: Path to NAM file
+    :type directory: os.PATH
+    :param match_list: list of value columns to match - eg. [UGRD_P0_L103_GLC0,VGRD_P0_L103_GLC0]
+    :type match_list: list
+    :param gps_list: listing of gps coordinates where we want data
+    :type gps_list: Pandas.DataFrame
+    :param output_folder: Folder to output our processed data
+    :type output_folder: os.PATH
+
+    |br|    
+    """
     logging.info("match_grb_file(): Matching values with filename {filename}".format(filename={grb_file}))
     f = os.path.join(directory, grb_file)
     fout = os.path.join(output_folder, grb_file[:-5]+'.csv.xz')
@@ -288,6 +345,20 @@ def fetch_lasthtmllink(url,tries=6):
 
     And our program needs to know the last link (most current), in the listing.
 
+    Function will produce logging output like:
+
+    ::
+
+     2022-08-31:10:32:36,67 INFO     [namdataserver.py:303] fetch_lasthtmllink() try #0 starting for 
+     https://www.ncei.noaa.gov/data/north-american-mesoscale-model/access/forecast/
+     2022-08-31:10:32:36,440 DEBUG    [namdataserver.py:318] Our fetched html looks like:
+               Name     Last modified Size  Description
+      0               NaN               NaN  NaN          NaN
+      1  Parent Directory               NaN    -          NaN
+      2           200710/  2021-02-09 16:51    -          NaN
+      2022-08-31:10:32:36,442 INFO     [namdataserver.py:321] fetch_lasthtmllink() completed successfully with 202208/ .
+
+
 
     :param url: http url link
     :type url: str
@@ -341,6 +412,25 @@ def fetch_file(url, filename, hashfile=None, tries=5):
     haslib.hash_finder() to the downloaded file and string comparing to the
     provided hashfile.  If file matches the hashfile the function exits 1
 
+    Example logging output from this function will look like:
+
+    :: 
+
+      2022-08-31:10:32:57,766 DEBUG    [namdataserver.py:359] fetch_file() starting from working directory /home/eturner/nam-dataserver to fetch file /home/eturner/nam-dataserver/downloaded_data/latest/nam_218_20220827_1800_002.grb2 from url 
+      https://www.ncei.noaa.gov/data/north-american-mesoscale-model/access/forecast/202208/20220827/nam_218_20220827_1800_002.grb2
+      2022-08-31:10:32:57,766 DEBUG    [namdataserver.py:364] fetch_file() using hashfile downloaded_data/latest/md5sum.20220827
+      2022-08-31:10:32:57,766 DEBUG    [namdataserver.py:48] Open_Pandas_CSV(): Attempting to open filename downloaded_data/latest/md5sum.20220827 with arguments {'header': None}
+      2022-08-31:10:32:57,767 DEBUG    [namdataserver.py:61] Openned downloaded_data/latest/md5sum.20220827 for reading with 424 entries
+      2022-08-31:10:32:57,767 DEBUG    [namdataserver.py:367] Hashfile looks like 
+      0    59472783f29c1f33dec236df62228480 nam_218_20220...
+      Name: 0, dtype: object
+      2022-08-31:10:32:57,767 INFO     [namdataserver.py:374] Fetching file https://www.ncei.noaa.gov/data/north-american-mesoscale-model/access/forecast/202208/20220827/nam_218_20220827_1800_002.grb2 try # 0 ...
+      2022-08-31:10:33:18,925 INFO     [namdataserver.py:384] Download took: 21.157721042633057 seconds
+      2022-08-31:10:33:18,926 DEBUG    [namdataserver.py:203] Performing hash operation on /home/eturner/nam-dataserver/downloaded_data/latest/nam_218_20220827_1800_002.grb2
+      2022-08-31:10:33:19,42 DEBUG    [namdataserver.py:388] File /home/eturner/nam-dataserver/downloaded_data/latest/nam_218_20220827_1800_002.grb2 has md5hash 1f0b6056ffdf73678b38ac416bdf1bde
+      2022-08-31:10:33:19,43 DEBUG    [namdataserver.py:391] Our hash matches the NAM metadata, we have the correct file - exiting fetch_file()
+      2022-08-31:10:33:19,43 INFO     [namdataserver.py:404] Successfully downloaded file.
+    
     :param url: http url link
     :type url: str
     :param filename: file IO PATH
@@ -711,6 +801,16 @@ def read_TWDB_NAM_csv(fn,folder,columns_name, convertUVwinds=True):
      -7.8431005,0.2863391,twdb008
      -8.1331005,1.8463391,twdb009
      -7.1031003,2.616339,twdb010
+
+    Example logging output from this function will look like:
+
+    ::
+    
+      2022-08-31:10:37:04,518 DEBUG    [namdataserver.py:732] read_TWDB_NAM_csv() Detected the timestamp from file nam_218_20220715_1200_003.csv.xz as 2022 07 15 12 03
+      2022-08-31:10:37:04,522 DEBUG    [namdataserver.py:745] read_TWDB_NAM_csv() Our completed ingested file looks like: 
+      station            Datetime   SPD_mph         DIR
+      0  twdb000 2022-07-15 15:00:00  8.738896  173.212468
+      1  twdb001 2022-07-15 15:00:00  8.173037  173.371993
 
     :param fn: filename pointing to a single NAM csv on disk.
     :type fn: os.PATH
