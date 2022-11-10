@@ -40,7 +40,7 @@ root_dir = os.path.join(home,"nam-dataserver")
 latest_dir = os.path.join(root_dir,"downloaded_data" ,"latest")
 processed_dir = os.path.join(root_dir,"downloaded_data", "twdb")
 NAM_column_listings = ["UGRD_P0_L103_GLC0","VGRD_P0_L103_GLC0"]
-output_dir = "/var/www/html/bays_estuaries/NAM-WINDS/"
+output_dir = "/var/www/midgewater/html/bays_estuaries/NAM-WINDS/"
 TWDB_Dir = os.path.join(root_dir,"examples", "twdb")
 
 #download latest NAM files
@@ -54,5 +54,5 @@ logging.debug("Read twdb station file with head \n {twdb_stations}".format(twdb_
 logging.info("Begin stripping needed data from NAM files using match_grb().")
 match_grb(latest_dir,NAM_column_listings,twdb_stations,processed_dir)
 logging.info("Converting stripped NAM values from csv to fixed width format.")
-Convert_TWDB(processed_dir,output_dir,root_dir+"tmp_working",twdb_stations)
+Convert_TWDB(processed_dir,output_dir,root_dir+"/tmp_working",twdb_stations,records=400)
 logging.info("Completed TWDB nam-dataserver script")

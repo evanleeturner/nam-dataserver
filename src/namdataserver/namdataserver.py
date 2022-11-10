@@ -465,7 +465,7 @@ def fetch_file(url, filename, hashfile=None, tries=5):
         try:
             urllib.request.urlretrieve(url,filename=filename)
         except BaseException as e:
-            logging.warning("Failed to download file {file} from \n{url}".format(file=file,url=url))
+            logging.warning("Failed to download file {file} from \n{url}".format(file=filename,url=url))
             logging.warning('The exception from urllib library was: {}'.format(e))
             return
 
@@ -604,7 +604,7 @@ def download_latest(model='218'):
     #fetch the md5sum file from NAM folder so we can process.
     #use the last file as method to find md5sum file Name
     md5_name = 'md5sum.'+our_day[:-1]
-    success = fetch_file(url_base+our_month+our_day+md5_name, root_dir+'downloaded_data/latest/'+md5_name)
+    hashsuccess = fetch_file(url_base+our_month+our_day+md5_name, root_dir+'downloaded_data/latest/'+md5_name)
     #open md5 listing for reading
 
     st = time.time()  #our program start time...
@@ -615,7 +615,10 @@ def download_latest(model='218'):
         st2 = time.time()  #our program start time...
         our_file=str(url_base+our_month+our_day+file_prefix+'_'+str(index).zfill(3)+file_post)
         local_name=str(file_prefix+'_'+str(index).zfill(3)+file_post)
-        success = fetch_file(url_base+our_month+our_day+file_prefix+'_'+str(index).zfill(3)+file_post, root_dir+'downloaded_data/latest/'+local_name, 'downloaded_data/latest/'+md5_name)
+        if hashsuccess is True:
+            success = fetch_file(url_base+our_month+our_day+file_prefix+'_'+str(index).zfill(3)+file_post, root_dir+'downloaded_data/latest/'+local_name, 'downloaded_data/latest/'+md5_name)
+        else:
+            success = fetch_file(url_base+our_month+our_day+file_prefix+'_'+str(index).zfill(3)+file_post, root_dir+'downloaded_data/latest/'+local_name)
 
         if success == False:
             has_error = True
@@ -846,7 +849,7 @@ def read_TWDB_NAM_csv(fn,folder,columns_name, convertUVwinds=True):
 
     return tmp
 
-def Convert_TWDB(import_folder,OUTPUT_folder,TMP_folder,windlist_df):
+def Convert_TWDB(import_folder,OUTPUT_folder,TMP_folder,windlist_df,records=None):
     """
     Large first-step wrapper function to convert NAM data to TWDB format and
     send output as a tar file for use in TxBLEND model.
@@ -895,6 +898,11 @@ def Convert_TWDB(import_folder,OUTPUT_folder,TMP_folder,windlist_df):
     #combine the list of dataframes data[] into one giant frame...
     df = pd.concat(data, axis=0)
     df.sort_values(by=['Datetime'],inplace=True)
+    #df.reset_index(inplace=True,drop=True)
+    #if records is not None:
+    #    ourlen = len(df)
+    #    df = df.truncate(before = ourlen-records)
+
     logging.debug("Created one dataframe with record length {} from {} to {}".format(len(df),df['Datetime'].min(),df['Datetime'].max()))
     logging.debug("Our dataframe looks like: \n{} \n{}".format(df.head(2),df.tail(2)))
 
