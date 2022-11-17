@@ -616,7 +616,7 @@ def download_latest(model='218'):
         our_file=str(url_base+our_month+our_day+file_prefix+'_'+str(index).zfill(3)+file_post)
         local_name=str(file_prefix+'_'+str(index).zfill(3)+file_post)
         if hashsuccess is True:
-            success = fetch_file(url_base+our_month+our_day+file_prefix+'_'+str(index).zfill(3)+file_post, root_dir+'downloaded_data/latest/'+local_name, 'downloaded_data/latest/'+md5_name)
+            success = fetch_file(url_base+our_month+our_day+file_prefix+'_'+str(index).zfill(3)+file_post, root_dir+'downloaded_data/latest/'+local_name, root_dir+'downloaded_data/latest/'+md5_name)
         else:
             success = fetch_file(url_base+our_month+our_day+file_prefix+'_'+str(index).zfill(3)+file_post, root_dir+'downloaded_data/latest/'+local_name,None)
 
